@@ -1,0 +1,2146 @@
+{
+  "version": "Notebook/1.0",
+  "items": [
+    {
+      "type": 11,
+      "content": {
+        "version": "LinkItem/1.0",
+        "style": "tabs",
+        "links": [
+          {
+            "id": "5c6345b5-c161-4e4b-a698-2d66a68191b8",
+            "cellValue": "tab",
+            "linkTarget": "parameter",
+            "linkLabel": "Overview",
+            "subTarget": "overview",
+            "preText": "Overview",
+            "style": "link"
+          },
+          {
+            "id": "9e4d7c59-2d77-49fb-ba76-fbb2410c66a9",
+            "cellValue": "tab",
+            "linkTarget": "parameter",
+            "linkLabel": "Mailbox Activities",
+            "subTarget": "mailact",
+            "style": "link"
+          },
+          {
+            "id": "4272aed9-2f05-433f-b3d5-a64c3e62be90",
+            "cellValue": "tab",
+            "linkTarget": "parameter",
+            "linkLabel": "Suspicious Activities",
+            "subTarget": "suspact",
+            "style": "link"
+          }
+        ]
+      },
+      "name": "links - 26"
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 1,
+            "content": {
+              "json": "## Overview"
+            },
+            "conditionalVisibility": {
+              "parameterName": "tab",
+              "comparison": "isEqualTo",
+              "value": "overview"
+            },
+            "name": "overview"
+          },
+          {
+            "type": 9,
+            "content": {
+              "version": "KqlParameterItem/1.0",
+              "parameters": [
+                {
+                  "id": "fd258da3-1556-41fc-b428-17122a3c8662",
+                  "version": "KqlParameterItem/1.0",
+                  "name": "TimeRange",
+                  "type": 4,
+                  "isRequired": true,
+                  "value": {
+                    "durationMs": 604800000
+                  },
+                  "typeSettings": {
+                    "selectableValues": [
+                      {
+                        "durationMs": 300000
+                      },
+                      {
+                        "durationMs": 900000
+                      },
+                      {
+                        "durationMs": 1800000
+                      },
+                      {
+                        "durationMs": 3600000
+                      },
+                      {
+                        "durationMs": 14400000
+                      },
+                      {
+                        "durationMs": 43200000
+                      },
+                      {
+                        "durationMs": 86400000
+                      },
+                      {
+                        "durationMs": 172800000
+                      },
+                      {
+                        "durationMs": 259200000
+                      },
+                      {
+                        "durationMs": 604800000
+                      },
+                      {
+                        "durationMs": 1209600000
+                      },
+                      {
+                        "durationMs": 2419200000
+                      },
+                      {
+                        "durationMs": 2592000000
+                      },
+                      {
+                        "durationMs": 5184000000
+                      },
+                      {
+                        "durationMs": 7776000000
+                      }
+                    ],
+                    "allowCustom": true
+                  }
+                },
+                {
+                  "id": "69330e1e-2163-4a9c-aaba-4709b3dd8fd4",
+                  "version": "KqlParameterItem/1.0",
+                  "name": "Operations",
+                  "label": "Activity",
+                  "type": 2,
+                  "isRequired": true,
+                  "multiSelect": true,
+                  "quote": "'",
+                  "delimiter": ",",
+                  "query": "OfficeActivity\r\n| where OfficeWorkload == 'Exchange' \r\n| summarize Count = count() by Operation\r\n| order by Count desc, Operation asc\r\n//| project Operation, Label = strcat(Operation, ' - ', Count)\r\n| project Operation",
+                  "value": [
+                    "value::all"
+                  ],
+                  "typeSettings": {
+                    "additionalResourceOptions": [
+                      "value::all"
+                    ],
+                    "selectAllValue": "All",
+                    "showDefault": false
+                  },
+                  "timeContext": {
+                    "durationMs": 0
+                  },
+                  "timeContextFromParameter": "TimeRange",
+                  "queryType": 0,
+                  "resourceType": "microsoft.operationalinsights/workspaces"
+                },
+                {
+                  "id": "d7cb90a3-0f9a-47a0-9a3f-f6694f872406",
+                  "version": "KqlParameterItem/1.0",
+                  "name": "Workload",
+                  "label": "Office Workload",
+                  "type": 2,
+                  "description": "Office Activity Workload",
+                  "isRequired": true,
+                  "multiSelect": true,
+                  "quote": "'",
+                  "delimiter": ",",
+                  "query": "OfficeActivity\n| distinct OfficeWorkload",
+                  "value": [
+                    "value::all"
+                  ],
+                  "typeSettings": {
+                    "additionalResourceOptions": [
+                      "value::all"
+                    ]
+                  },
+                  "timeContext": {
+                    "durationMs": 0
+                  },
+                  "timeContextFromParameter": "TimeRange",
+                  "queryType": 0,
+                  "resourceType": "microsoft.operationalinsights/workspaces"
+                },
+                {
+                  "id": "1119031c-7927-4946-9048-9eedd4d07129",
+                  "version": "KqlParameterItem/1.0",
+                  "name": "Mailbox",
+                  "type": 2,
+                  "isRequired": true,
+                  "multiSelect": true,
+                  "quote": "'",
+                  "delimiter": ",",
+                  "query": "OfficeActivity\n| where isnotempty(MailboxOwnerUPN)\n| distinct MailboxOwnerUPN",
+                  "value": [
+                    "value::all"
+                  ],
+                  "typeSettings": {
+                    "additionalResourceOptions": [
+                      "value::all"
+                    ],
+                    "showDefault": false
+                  },
+                  "timeContext": {
+                    "durationMs": 0
+                  },
+                  "timeContextFromParameter": "TimeRange",
+                  "queryType": 0,
+                  "resourceType": "microsoft.operationalinsights/workspaces"
+                },
+                {
+                  "id": "f96bc853-2f79-4bed-ab9b-a84c546dc0d5",
+                  "version": "KqlParameterItem/1.0",
+                  "name": "RecordType",
+                  "label": "Record Type",
+                  "type": 2,
+                  "isRequired": true,
+                  "multiSelect": true,
+                  "quote": "'",
+                  "delimiter": ",",
+                  "query": "OfficeActivity\n| distinct RecordType",
+                  "value": [
+                    "value::all"
+                  ],
+                  "typeSettings": {
+                    "additionalResourceOptions": [
+                      "value::all"
+                    ],
+                    "showDefault": false
+                  },
+                  "timeContext": {
+                    "durationMs": 2592000000
+                  },
+                  "timeContextFromParameter": "TimeRange",
+                  "queryType": 0,
+                  "resourceType": "microsoft.operationalinsights/workspaces"
+                },
+                {
+                  "id": "35ef6588-3aa6-4c4a-b50f-1f232923e6ba",
+                  "version": "KqlParameterItem/1.0",
+                  "name": "DeliverAction",
+                  "type": 2,
+                  "isRequired": true,
+                  "multiSelect": true,
+                  "quote": "'",
+                  "delimiter": ",",
+                  "query": "EmailEvents\n| distinct DeliveryAction",
+                  "value": [
+                    "Junked",
+                    "Blocked"
+                  ],
+                  "typeSettings": {
+                    "additionalResourceOptions": [
+                      "value::all"
+                    ],
+                    "showDefault": false
+                  },
+                  "timeContext": {
+                    "durationMs": 0
+                  },
+                  "timeContextFromParameter": "TimeRange",
+                  "queryType": 0,
+                  "resourceType": "microsoft.operationalinsights/workspaces"
+                },
+                {
+                  "id": "1cd63f56-fe57-485c-926d-684710f66fd8",
+                  "version": "KqlParameterItem/1.0",
+                  "name": "About",
+                  "type": 10,
+                  "description": "Explanatory Note ",
+                  "isRequired": true,
+                  "typeSettings": {
+                    "additionalResourceOptions": []
+                  },
+                  "jsonData": "[\n    \"Show\",\n    \"Hide\"\n]",
+                  "timeContext": {
+                    "durationMs": 0
+                  },
+                  "timeContextFromParameter": "TimeRange",
+                  "value": "Hide"
+                }
+              ],
+              "style": "pills",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces"
+            },
+            "name": "parameters - 1"
+          },
+          {
+            "type": 12,
+            "content": {
+              "version": "NotebookGroup/1.0",
+              "groupType": "editable",
+              "title": "About Group",
+              "items": [
+                {
+                  "type": 1,
+                  "content": {
+                    "json": "## Overview \n\nThis is Tab shows provide a fundamental overview of the Exchange Online status. It is designed to provide a print-ready dashboard to easy distribution to management.",
+                    "style": "info"
+                  },
+                  "name": "about-note"
+                },
+                {
+                  "type": 1,
+                  "content": {
+                    "json": "## Explanatory Note (draft version created on Jul 31, 2022)\n\n* Detect Forwarding Inbox Rules (New-InboxRule Set-InboxRule | Enable-InboxRule ...)\n* Detect Transport Rules (New-TransportRule | Set-TransportRule | Enable-TransportRule ...)\n* Detect Mailbox delegation (SentTo | BindCopyTo | ForwardTo )\n* Detect MessageItemAccess (Sync | Bind)\n* Detect OAuth applications (to be updated)",
+                    "style": "upsell"
+                  },
+                  "name": "text - 19"
+                },
+                {
+                  "type": 1,
+                  "content": {
+                    "json": "### [DATC] - Exchange Workbook (by: Frankie Li)\n\nI design the workbook. Some queries are modified from examples from Microsoft or Microsoft Sentinel Communities. The community, organizations, and business entities can freely use all my works. However, if any MSP wants to use my work for business purposes, please get in touch with frankie@dragonadvancetech.com for permission before deploying it to your client's tenant.\n\n![Image Name](https://www.borza.com/clogo/dragonadvancetech.com.png?width=85&height=30) ",
+                    "style": "success"
+                  },
+                  "name": "text - 20"
+                }
+              ]
+            },
+            "conditionalVisibility": {
+              "parameterName": "About",
+              "comparison": "isEqualTo",
+              "value": "Show"
+            },
+            "name": "AboutGroup"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "// [DATC] - Parsing data insights from OfficeActivit \n// Created on: 26-07-2022, 27-07-2022\n// By: Frankie \n// Splunk App: Tenant Operation\nOfficeActivity\n| where OfficeWorkload in ({Workload})\n| where RecordType in ({RecordType})\n| where MailboxOwnerUPN in ({Mailbox})\n| summarize Counts = count() by OfficeWorkload, bin(TimeGenerated, 1d)\n| render timechart ",
+              "size": 0,
+              "title": "Office Workload",
+              "timeBrushParameterName": "Brushing",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "chartSettings": {
+                "showLegend": true
+              }
+            },
+            "customWidth": "50",
+            "name": "workload-chart"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "// [DATC] - Parsing data insights from OfficeActivit \n// Created on: 26-07-2022, 27-07-2022\n// By: Frankie \n// Splunk App: Operation by User\nOfficeActivity\n| where OfficeWorkload in ({Workload})\n| where RecordType in ({RecordType})\n| where MailboxOwnerUPN in ({Mailbox})\n| summarize Count = count() by UserId",
+              "size": 0,
+              "title": "Office Activity by Users",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "piechart",
+              "gridSettings": {
+                "sortBy": [
+                  {
+                    "itemKey": "Count",
+                    "sortOrder": 2
+                  }
+                ]
+              },
+              "sortBy": [
+                {
+                  "itemKey": "Count",
+                  "sortOrder": 2
+                }
+              ],
+              "chartSettings": {
+                "showMetrics": false,
+                "showLegend": true
+              }
+            },
+            "customWidth": "50",
+            "name": "operation-chart"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "OfficeActivity\r\n| where OfficeWorkload in ({Workload})\r\n| where RecordType in ({RecordType})\r\n| where MailboxOwnerUPN in ({Mailbox})\r\n//| where Operation in ({Operations})\r\n| where \"{Operations:lable}\" == \"All\" or \"{Operations:lable}\" == \"All\" or Operation in ({Operations})\r\n| summarize count() by Operation, bin(TimeGenerated, 1d)",
+              "size": 0,
+              "title": "Operations Chart",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "barchart",
+              "chartSettings": {
+                "showLegend": true
+              }
+            },
+            "customWidth": "100",
+            "conditionalVisibility": {
+              "parameterName": "About",
+              "comparison": "isEqualTo",
+              "value": "Hide"
+            },
+            "name": "operations-chart"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "OfficeActivity\r\n| where OfficeWorkload in ({Workload})\r\n| where RecordType in ({RecordType})\r\n| where MailboxOwnerUPN in ({Mailbox})\r\n| where \"{Operations:lable}\" == \"All\" or \"{Operations:lable}\" == \"All\" or Operation in ({Operations})\r\n| summarize count() by Operation, bin(TimeGenerated, 1d)",
+              "size": 0,
+              "title": "Operations Chart",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "unstackedbar",
+              "chartSettings": {
+                "showLegend": true
+              }
+            },
+            "customWidth": "100",
+            "conditionalVisibility": {
+              "parameterName": "About",
+              "comparison": "isEqualTo",
+              "value": "Show"
+            },
+            "name": "operations-chart2"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let data = OfficeActivity\r\n| where OfficeWorkload == 'Exchange' \r\n| where RecordType in ({RecordType})\r\n| where MailboxOwnerUPN in ({Mailbox})\r\n| where \"{Operations:lable}\" == \"All\" or Operation in ({Operations});\r\nlet appData = data\r\n| summarize TotalCount = count() by UserId\r\n| join kind=inner (data\r\n    | make-series Trend = count() default = 0 on bin(TimeGenerated, 1d) in range({TimeRange:start}, {TimeRange:end}, {TimeRange:grain}) by UserId\r\n    | project-away TimeGenerated) on UserId\r\n| order by TotalCount desc, UserId asc\r\n| project UserId, TotalCount, Trend\r\n| serialize Id = row_number();\r\ndata\r\n| summarize TotalCount = count() by Operation , UserId\r\n| join kind=inner (data\r\n    | make-series Trend = count() default = 0 on bin(TimeGenerated, 1d) in range({TimeRange:start}, {TimeRange:end}, {TimeRange:grain}) by UserId, Operation\r\n    | project-away TimeGenerated) on UserId, Operation\r\n| order by TotalCount desc, UserId asc\r\n| project UserId, Operation, TotalCount, Trend\r\n| serialize Id = row_number(1000000)\r\n| join kind=inner (appData) on UserId\r\n| project Id, Name = Operation, Type = 'Operation', ['Operation Count'] = TotalCount, Trend, ParentId = Id1\r\n| union (appData \r\n    | project Id, Name = UserId, Type = 'UserId', ['Operation Count'] = TotalCount, Trend )\r\n| order by ['Operation Count'] desc, Name asc",
+              "size": 0,
+              "title": "User activities",
+              "timeContextFromParameter": "TimeRange",
+              "exportParameterName": "OperationInfo",
+              "exportDefaultValue": "{ \"Name\":\"\", \"Type\":\"*\"}",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "Id",
+                    "formatter": 5,
+                    "formatOptions": {
+                      "showIcon": true
+                    }
+                  },
+                  {
+                    "columnMatch": "Operation Count",
+                    "formatter": 3,
+                    "formatOptions": {
+                      "palette": "lightBlue",
+                      "showIcon": true
+                    }
+                  },
+                  {
+                    "columnMatch": "Trend",
+                    "formatter": 9,
+                    "formatOptions": {
+                      "min": 0,
+                      "palette": "blue",
+                      "showIcon": true
+                    }
+                  },
+                  {
+                    "columnMatch": "ParentId",
+                    "formatter": 5,
+                    "formatOptions": {
+                      "showIcon": true
+                    }
+                  }
+                ],
+                "filter": true,
+                "hierarchySettings": {
+                  "idColumn": "Id",
+                  "parentColumn": "ParentId",
+                  "treeType": 0,
+                  "expanderColumn": "Name"
+                }
+              }
+            },
+            "customWidth": "50",
+            "name": "query - 4"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "OfficeActivity \r\n| where OfficeWorkload == 'Exchange' \r\n| where OfficeWorkload in ({Workload})\r\n| where RecordType in ({RecordType})\r\n| where MailboxOwnerUPN in ({Mailbox})\r\n| where \"{Operations:lable}\" == \"All\" or Operation in ({Operations})\r\n| summarize count() by UserType \r\n//| order by count_",
+              "size": 0,
+              "title": "User type activities",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "piechart"
+            },
+            "customWidth": "25",
+            "name": "query - 3"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "OfficeActivity \r\n| where OfficeWorkload == 'Exchange' and UserType == 'Admin' \r\n| where MailboxOwnerUPN in ({Mailbox})\r\n| where \"{Operations:lable}\" == \"All\" or Operation in ({Operations})\r\n| summarize count() by Operation ",
+              "size": 0,
+              "title": "Admin activities",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "piechart"
+            },
+            "customWidth": "25",
+            "name": "query - 15"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "//Exchange activities that are performed by actors outside your organization - external\r\nlet OI = dynamic({OperationInfo});\r\nOfficeActivity\r\n| where (OI.Type==\"*\" or (OI.Type == 'UserId' and OI.Name == UserId) or (OI.Type == 'Operation' and OI.Name == Operation))\r\n| where OfficeWorkload == 'Exchange'\r\n| where \"{Operations:lable}\" == \"All\" or Operation in ({Operations})\r\n| where MailboxOwnerUPN in ({Mailbox})\r\n| where ExternalAccess == 'True' \r\n| summarize count() by Operation\r\n | sort by count_",
+              "size": 0,
+              "title": "External access activities, by activities",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "piechart"
+            },
+            "customWidth": "40",
+            "name": "query - 6"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "//Exchange activities that are performed by actors outside your organization - external\r\nlet OI = dynamic({OperationInfo});\r\nOfficeActivity\r\n| where OfficeWorkload == 'Exchange'\r\n| where RecordType in ({RecordType})\r\n| where MailboxOwnerUPN in ({Mailbox})\r\n| where (OI.Type==\"*\" or (OI.Type == 'UserId' and OI.Name == UserId) or (OI.Type == 'Operation' and OI.Name == Operation))\r\n| where \"{Operations:lable}\" == \"All\" or Operation in ({Operations})\r\n| where ExternalAccess == 'True' \r\n| summarize Amount = count() by Operation, UserId, UserType, ClientIP, bin(TimeGenerated, 1h)\r\n| project Amount, Activity = Operation, UserId, UserType, ClientIP, TimeGenerated\r\n| order by Amount desc",
+              "size": 0,
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "Amount",
+                    "formatter": 8,
+                    "formatOptions": {
+                      "palette": "magenta",
+                      "showIcon": true,
+                      "aggregation": "Sum"
+                    }
+                  },
+                  {
+                    "columnMatch": "Activity",
+                    "formatter": 5,
+                    "formatOptions": {
+                      "showIcon": true
+                    }
+                  },
+                  {
+                    "columnMatch": "UserId",
+                    "formatter": 5,
+                    "formatOptions": {
+                      "showIcon": true
+                    }
+                  },
+                  {
+                    "columnMatch": "UserType",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "showIcon": true,
+                      "aggregation": "Unique"
+                    }
+                  }
+                ],
+                "filter": true,
+                "hierarchySettings": {
+                  "treeType": 1,
+                  "groupBy": [
+                    "Activity",
+                    "UserId"
+                  ]
+                }
+              }
+            },
+            "customWidth": "60",
+            "name": "query - 7"
+          }
+        ]
+      },
+      "conditionalVisibility": {
+        "parameterName": "tab",
+        "comparison": "isEqualTo",
+        "value": "overview"
+      },
+      "name": "overview-group"
+    },
+    {
+      "type": 1,
+      "content": {
+        "json": "## Mailbox Activity"
+      },
+      "conditionalVisibility": {
+        "parameterName": "tab",
+        "comparison": "isEqualTo",
+        "value": "mailact"
+      },
+      "name": "Title"
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 9,
+            "content": {
+              "version": "KqlParameterItem/1.0",
+              "parameters": [
+                {
+                  "id": "fd258da3-1556-41fc-b428-17122a3c8662",
+                  "version": "KqlParameterItem/1.0",
+                  "name": "TimeRange",
+                  "type": 4,
+                  "isRequired": true,
+                  "value": {
+                    "durationMs": 604800000
+                  },
+                  "typeSettings": {
+                    "selectableValues": [
+                      {
+                        "durationMs": 300000
+                      },
+                      {
+                        "durationMs": 900000
+                      },
+                      {
+                        "durationMs": 1800000
+                      },
+                      {
+                        "durationMs": 3600000
+                      },
+                      {
+                        "durationMs": 14400000
+                      },
+                      {
+                        "durationMs": 43200000
+                      },
+                      {
+                        "durationMs": 86400000
+                      },
+                      {
+                        "durationMs": 172800000
+                      },
+                      {
+                        "durationMs": 259200000
+                      },
+                      {
+                        "durationMs": 604800000
+                      },
+                      {
+                        "durationMs": 1209600000
+                      },
+                      {
+                        "durationMs": 2419200000
+                      },
+                      {
+                        "durationMs": 2592000000
+                      },
+                      {
+                        "durationMs": 5184000000
+                      },
+                      {
+                        "durationMs": 7776000000
+                      }
+                    ],
+                    "allowCustom": true
+                  }
+                },
+                {
+                  "id": "69330e1e-2163-4a9c-aaba-4709b3dd8fd4",
+                  "version": "KqlParameterItem/1.0",
+                  "name": "Operations",
+                  "label": "Activity",
+                  "type": 2,
+                  "isRequired": true,
+                  "multiSelect": true,
+                  "quote": "'",
+                  "delimiter": ",",
+                  "query": "OfficeActivity\r\n| where OfficeWorkload == 'Exchange' \r\n| summarize Count = count() by Operation\r\n| order by Count desc, Operation asc\r\n//| project Operation, Label = strcat(Operation, ' - ', Count)\r\n| project Operation",
+                  "value": [
+                    "value::all"
+                  ],
+                  "typeSettings": {
+                    "additionalResourceOptions": [
+                      "value::all"
+                    ],
+                    "selectAllValue": "All",
+                    "showDefault": false
+                  },
+                  "timeContext": {
+                    "durationMs": 0
+                  },
+                  "timeContextFromParameter": "TimeRange",
+                  "queryType": 0,
+                  "resourceType": "microsoft.operationalinsights/workspaces"
+                },
+                {
+                  "id": "d7cb90a3-0f9a-47a0-9a3f-f6694f872406",
+                  "version": "KqlParameterItem/1.0",
+                  "name": "Workload",
+                  "label": "Office Workload",
+                  "type": 2,
+                  "description": "Office Activity Workload",
+                  "isRequired": true,
+                  "multiSelect": true,
+                  "quote": "'",
+                  "delimiter": ",",
+                  "query": "OfficeActivity\n| distinct OfficeWorkload",
+                  "value": [
+                    "value::all"
+                  ],
+                  "typeSettings": {
+                    "additionalResourceOptions": [
+                      "value::all"
+                    ]
+                  },
+                  "timeContext": {
+                    "durationMs": 0
+                  },
+                  "timeContextFromParameter": "TimeRange",
+                  "queryType": 0,
+                  "resourceType": "microsoft.operationalinsights/workspaces"
+                },
+                {
+                  "id": "1119031c-7927-4946-9048-9eedd4d07129",
+                  "version": "KqlParameterItem/1.0",
+                  "name": "Mailbox",
+                  "type": 2,
+                  "isRequired": true,
+                  "multiSelect": true,
+                  "quote": "'",
+                  "delimiter": ",",
+                  "query": "OfficeActivity\n| where isnotempty(MailboxOwnerUPN)\n| distinct MailboxOwnerUPN",
+                  "value": [
+                    "value::all"
+                  ],
+                  "typeSettings": {
+                    "additionalResourceOptions": [
+                      "value::all"
+                    ],
+                    "showDefault": false
+                  },
+                  "timeContext": {
+                    "durationMs": 0
+                  },
+                  "timeContextFromParameter": "TimeRange",
+                  "queryType": 0,
+                  "resourceType": "microsoft.operationalinsights/workspaces"
+                },
+                {
+                  "id": "f96bc853-2f79-4bed-ab9b-a84c546dc0d5",
+                  "version": "KqlParameterItem/1.0",
+                  "name": "RecordType",
+                  "label": "Record Type",
+                  "type": 2,
+                  "isRequired": true,
+                  "multiSelect": true,
+                  "quote": "'",
+                  "delimiter": ",",
+                  "query": "OfficeActivity\n| distinct RecordType",
+                  "value": [
+                    "value::all"
+                  ],
+                  "typeSettings": {
+                    "additionalResourceOptions": [
+                      "value::all"
+                    ],
+                    "showDefault": false
+                  },
+                  "timeContext": {
+                    "durationMs": 2592000000
+                  },
+                  "timeContextFromParameter": "TimeRange",
+                  "queryType": 0,
+                  "resourceType": "microsoft.operationalinsights/workspaces"
+                },
+                {
+                  "id": "35ef6588-3aa6-4c4a-b50f-1f232923e6ba",
+                  "version": "KqlParameterItem/1.0",
+                  "name": "DeliverAction",
+                  "type": 2,
+                  "isRequired": true,
+                  "multiSelect": true,
+                  "quote": "'",
+                  "delimiter": ",",
+                  "query": "EmailEvents\n| distinct DeliveryAction",
+                  "value": [
+                    "Junked",
+                    "Blocked"
+                  ],
+                  "typeSettings": {
+                    "additionalResourceOptions": [
+                      "value::all"
+                    ],
+                    "showDefault": false
+                  },
+                  "timeContext": {
+                    "durationMs": 0
+                  },
+                  "timeContextFromParameter": "TimeRange",
+                  "queryType": 0,
+                  "resourceType": "microsoft.operationalinsights/workspaces"
+                },
+                {
+                  "id": "1cd63f56-fe57-485c-926d-684710f66fd8",
+                  "version": "KqlParameterItem/1.0",
+                  "name": "About",
+                  "type": 10,
+                  "description": "Explanatory Note ",
+                  "isRequired": true,
+                  "typeSettings": {
+                    "additionalResourceOptions": []
+                  },
+                  "jsonData": "[\n    \"Show\",\n    \"Hide\"\n]",
+                  "timeContext": {
+                    "durationMs": 0
+                  },
+                  "timeContextFromParameter": "TimeRange",
+                  "value": "Hide"
+                }
+              ],
+              "style": "pills",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces"
+            },
+            "name": "parameters - 1"
+          },
+          {
+            "type": 1,
+            "content": {
+              "json": "---\r\n# Suspicious Activities"
+            },
+            "conditionalVisibility": {
+              "parameterName": "tab",
+              "comparison": "isEqualTo",
+              "value": "suspact"
+            },
+            "name": "titlep-suspact"
+          },
+          {
+            "type": 12,
+            "content": {
+              "version": "NotebookGroup/1.0",
+              "groupType": "editable",
+              "title": "About Group",
+              "items": [
+                {
+                  "type": 1,
+                  "content": {
+                    "json": "## Suspicious Activities\n\nThis Tab shows the suspicious mailbox activities. Mainly the forwarding rules and mailbox access activities (Sync or Bind).\n",
+                    "style": "info"
+                  },
+                  "name": "about-note"
+                },
+                {
+                  "type": 1,
+                  "content": {
+                    "json": "## Explanatory Note (draft version created on Jul 31, 2022)\n\n* Detect Forwarding Inbox Rules (New-InboxRule Set-InboxRule | Enable-InboxRule ...)\n* Detect Transport Rules (New-TransportRule | Set-TransportRule | Enable-TransportRule ...)\n* Detect Mailbox delegation (SentTo | BindCopyTo | ForwardTo )\n* Detect MessageItemAccess (Sync | Bind)\n* Detect OAuth applications (to be updated)\n* Detect Email Attachments (to be updated, for E5 tenant only)\n* Detect Email Url (to be updated, for E5 tenant only)\n* Detect Email Post Delivery Events (to be updated, for E5 tenant only)",
+                    "style": "upsell"
+                  },
+                  "name": "text - 19"
+                },
+                {
+                  "type": 1,
+                  "content": {
+                    "json": "### [DATC] - Exchange Workbook (by: Frankie Li)\n\nI design the workbook. Some queries are modified from examples from Microsoft or Microsoft Sentinel Communities. The community, organizations, and business entities can freely use all my works. However, if any MSP wants to use my work for business purposes, please get in touch with frankie@dragonadvancetech.com for permission before deploying it to your client's tenant.\n\n![Image Name](https://www.borza.com/clogo/dragonadvancetech.com.png?width=85&height=30) ",
+                    "style": "success"
+                  },
+                  "name": "text - 20"
+                }
+              ]
+            },
+            "conditionalVisibility": {
+              "parameterName": "About",
+              "comparison": "isEqualTo",
+              "value": "Show"
+            },
+            "name": "AboutGroup"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "OfficeActivity \r\n| where OfficeWorkload == 'Exchange' and Operation == 'Set-Mailbox'\r\n//| where UserId != 'NT AUTHORITY\\\\SYSTEM (Microsoft.Exchange.ServiceHost)' and UserId != 'NT AUTHORITY\\\\SYSTEM (Microsoft.Exchange.Servicehost)' \r\n| where not(UserId contains \"NT AUTHORITY\")\r\n| mv-expand todynamic(Parameters)\r\n| project TimeGenerated ,  UserId, UserType, Key = Parameters.Name, Value = Parameters.Value",
+              "size": 0,
+              "title": "Set rules operations - in detail",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "TimeGenerated",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "12ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "UserId",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "UserType",
+                    "formatter": 18,
+                    "formatOptions": {
+                      "thresholdsOptions": "colors",
+                      "thresholdsGrid": [
+                        {
+                          "operator": "==",
+                          "thresholdValue": "DcAdmin",
+                          "representation": "lightBlue",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "Default",
+                          "thresholdValue": null,
+                          "representation": null,
+                          "text": "{0}{1}"
+                        }
+                      ],
+                      "customColumnWidthSetting": "10ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Key",
+                    "formatter": 18,
+                    "formatOptions": {
+                      "thresholdsOptions": "colors",
+                      "thresholdsGrid": [
+                        {
+                          "operator": "==",
+                          "thresholdValue": "Identity",
+                          "representation": "lightBlue",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "==",
+                          "thresholdValue": "ResourceEmailAddresses",
+                          "representation": "turquoise",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "==",
+                          "thresholdValue": "BypassLiveId",
+                          "representation": "green",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "==",
+                          "thresholdValue": "Force",
+                          "representation": "orange",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "==",
+                          "thresholdValue": "DomainController",
+                          "representation": "grayBlue",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "contains",
+                          "thresholdValue": "Mail",
+                          "representation": "yellow",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "contains",
+                          "thresholdValue": "mail",
+                          "representation": "yellow",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "==",
+                          "thresholdValue": "Arbitration",
+                          "representation": "brown",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "Default",
+                          "thresholdValue": null,
+                          "representation": null,
+                          "text": "{0}{1}"
+                        }
+                      ],
+                      "customColumnWidthSetting": "25ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Value",
+                    "formatter": 18,
+                    "formatOptions": {
+                      "thresholdsOptions": "colors",
+                      "thresholdsGrid": [
+                        {
+                          "operator": "==",
+                          "thresholdValue": "True",
+                          "representation": "yellow",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "Default",
+                          "thresholdValue": null,
+                          "representation": null,
+                          "text": "{0}{1}"
+                        }
+                      ],
+                      "customColumnWidthSetting": "25ch"
+                    }
+                  }
+                ],
+                "filter": true
+              }
+            },
+            "customWidth": "50",
+            "name": "query - 12"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let InboxKeywords = dynamic(['New-InboxRule', 'UpdateInboxRules', 'Get-InboxRule', 'Set-InboxRule', 'Enable-InboxRule', 'Remove-InboxRule', 'Disable-InboxRule']);\nOfficeActivity \n| where OfficeWorkload == 'Exchange' and Operation has_any (InboxKeywords)\n| where MailboxOwnerUPN in ({Mailbox})\n| mv-expand todynamic(Parameters)\n| project TimeGenerated , UserId , UserType, IP = ClientIP, Key = Parameters.Name, Value = Parameters.Value",
+              "size": 1,
+              "title": "Inbox rules operations by UserId",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "TimeGenerated",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "12ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "UserId",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "UserType",
+                    "formatter": 18,
+                    "formatOptions": {
+                      "thresholdsOptions": "colors",
+                      "thresholdsGrid": [
+                        {
+                          "operator": "contains",
+                          "thresholdValue": "Admin",
+                          "representation": "lightBlue",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "Default",
+                          "thresholdValue": null,
+                          "representation": "blue",
+                          "text": "{0}{1}"
+                        }
+                      ],
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "IP",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "18ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Key",
+                    "formatter": 18,
+                    "formatOptions": {
+                      "thresholdsOptions": "colors",
+                      "thresholdsGrid": [
+                        {
+                          "operator": "==",
+                          "thresholdValue": "Force",
+                          "representation": "orange",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "contains",
+                          "thresholdValue": "Delete",
+                          "representation": "yellow",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "contains",
+                          "thresholdValue": "Stop",
+                          "representation": "orange",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "==",
+                          "thresholdValue": "Name",
+                          "representation": "lightBlue",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "==",
+                          "thresholdValue": "From",
+                          "representation": "gray",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "==",
+                          "thresholdValue": "MoveToFolder",
+                          "representation": "turquoise",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "==",
+                          "thresholdValue": "SentTo",
+                          "representation": "gray",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "contains",
+                          "thresholdValue": "Subject",
+                          "representation": "yellow",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "Default",
+                          "thresholdValue": null,
+                          "text": "{0}{1}"
+                        }
+                      ],
+                      "customColumnWidthSetting": "25ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Value",
+                    "formatter": 18,
+                    "formatOptions": {
+                      "thresholdsOptions": "colors",
+                      "thresholdsGrid": [
+                        {
+                          "operator": "==",
+                          "thresholdValue": "False",
+                          "representation": "orange",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "==",
+                          "thresholdValue": "True",
+                          "representation": "yellow",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "Default",
+                          "thresholdValue": null,
+                          "text": "{0}{1}"
+                        }
+                      ],
+                      "customColumnWidthSetting": "25ch"
+                    }
+                  }
+                ]
+              }
+            },
+            "customWidth": "50",
+            "name": "query - 16"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "OfficeActivity \n| where OfficeWorkload == 'Exchange' and Operation == 'New-TransportRule' or Operation == 'Set-TransportRule' or Operation == 'Remove-TransportRule' or Operation == 'Enable-TransportRule' or Operation == 'Disable-TransportRule' or Operation == 'Set-TransportConfig'\n| where UserId != 'NT AUTHORITY\\\\SYSTEM (Microsoft.Exchange.ServiceHost)'\n| mv-expand todynamic(Parameters)\n| project TimeGenerated , UserId , UserType, Key = Parameters.Name, Value = Parameters.Value",
+              "size": 1,
+              "title": "Transport rules operations - in details",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "UserType",
+                    "formatter": 18,
+                    "formatOptions": {
+                      "thresholdsOptions": "colors",
+                      "thresholdsGrid": [
+                        {
+                          "operator": "==",
+                          "thresholdValue": "DcAdmin",
+                          "representation": "lightBlue",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "Default",
+                          "thresholdValue": null,
+                          "text": "{0}{1}"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "columnMatch": "Key",
+                    "formatter": 18,
+                    "formatOptions": {
+                      "thresholdsOptions": "colors",
+                      "thresholdsGrid": [
+                        {
+                          "operator": "==",
+                          "thresholdValue": "DomainController",
+                          "representation": "grayBlue",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "==",
+                          "thresholdValue": "Identity",
+                          "representation": "purple",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "contains",
+                          "thresholdValue": "Super",
+                          "representation": "orange",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "contains",
+                          "thresholdValue": "Mail",
+                          "representation": "yellow",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "contains",
+                          "thresholdValue": "Hygiene",
+                          "representation": "green",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "Default",
+                          "thresholdValue": null,
+                          "text": "{0}{1}"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            "name": "query - 17"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "// [DATC] - High-risk Office operations\n// Created on: 12-06-2022, 16-07-2022\n// By: Frankie \n// \nOfficeActivity\n| where Operation in~ (\"New-Mailbox\", \"Set-OwaMailboxPolicy\", \"Set-MailboxPlan\", \"Set-MailboxJunkEmailConfiguration\", \"Add-MailboxPermission\", \"Add-MailboxFolderPermission\", \"Set-Mailbox\", \"New-ManagementRoleAssignment\", \"New-InboxRule\", \"Set-InboxRule\", \"Set-TransportRule\")\n    and not(UserId has_any ('NT AUTHORITY\\\\SYSTEM (Microsoft.Exchange.ServiceHost)', 'NT AUTHORITY\\\\SYSTEM (w3wp)', 'devilfish-applicationaccount'))\n| extend ClientIPOnly = tostring(extract_all(@'\\[?(::ffff:)?(?P<IPAddress>(\\d+\\.\\d+\\.\\d+\\.\\d+)|[^\\]]+)\\]?', dynamic([\"IPAddress\"]), ClientIP)[0][0])\n| mv-expand  Para = todynamic(Parameters)\n| extend ParaName = Para['Name'], ParaValue = Para['Value']\n| where ParaName contains \"rule\" or ParaName contains \"Prohibit\" or ParaName contains \"Domains\"\n| extend timestamp = TimeGenerated, AccountCustomEntity = UserId, IPCustomEntity = ClientIPOnly\n| project timestamp, Operation, AccountCustomEntity, IPCustomEntity, OfficeObjectId, ParaName, ParaValue\n",
+              "size": 0,
+              "title": "High-risk Office operations ",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "table",
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "timestamp",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Operation",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "20ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "AccountCustomEntity",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "25ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "IPCustomEntity",
+                    "formatter": 5
+                  },
+                  {
+                    "columnMatch": "OfficeObjectId",
+                    "formatter": 5
+                  },
+                  {
+                    "columnMatch": "ParaName",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "20ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "ParaValue",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "20ch"
+                    }
+                  }
+                ]
+              }
+            },
+            "customWidth": "40",
+            "name": "High-risk-Oper"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "// [DATC] - Detect Deduplicated Inbound Messages Subject line contains BEC keywords\n// Created on: 12-06-2022, 16-07-2022\n// By: Frankie\n// https://expel.com/blog/seven-ways-to-spot-business-email-compromise-office-365/\n//let starttime = 1d;\n//let endtime = 1d;\nEmailEvents\n//| where TimeGenerated > ago(starttime)\n| where DeliveryAction == \"Delivered\" and DeliveryLocation == \"Inbox/folder\" and EmailDirection == \"Inbound\"\n| where Subject contains \"Wire\" or Subject contains \"Invoice\" or Subject contains \"Payroll\" or Subject contains \"Deposit\" or Subject contains \"Payment\" or Subject contains \"Cash\" \n| extend Auth = todynamic(AuthenticationDetails)\n| extend Auth.SPF, Auth.DKIM, Auth.DMARC, Auth.CompAuth\n// | project Auth_SPF, Auth_DKIM, Auth_DMARC, Auth_CompAuth\n// | project Subject, SenderIPv4, RecipientEmailAddress, SenderFromAddress, SenderFromDomain\n| summarize any(RecipientEmailAddress, SenderFromAddress, SenderFromDomain, SenderIPv4, Auth_SPF, Auth_DKIM, Auth_DMARC, Auth.CompAuth) by Subject",
+              "size": 0,
+              "title": "Detect Deduplicated Inbound Messages Subject line contains BEC keywords",
+              "timeContext": {
+                "durationMs": 86400000
+              },
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "Subject",
+                    "formatter": 18,
+                    "formatOptions": {
+                      "thresholdsOptions": "icons",
+                      "thresholdsGrid": [
+                        {
+                          "operator": "contains",
+                          "thresholdValue": "Wire",
+                          "representation": "2",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "contains",
+                          "thresholdValue": "Invoice",
+                          "representation": "2",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "contains",
+                          "thresholdValue": "Payment",
+                          "representation": "2",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "Default",
+                          "thresholdValue": null,
+                          "representation": "info",
+                          "text": "{0}{1}"
+                        }
+                      ],
+                      "customColumnWidthSetting": "25ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "any_RecipientEmailAddress",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "20ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "any_SenderFromAddress",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "20ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "any_SenderFromDomain",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "20ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "any_SenderIPv4",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "18ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "any_Auth_SPF",
+                    "formatter": 18,
+                    "formatOptions": {
+                      "thresholdsOptions": "colors",
+                      "thresholdsGrid": [
+                        {
+                          "operator": "==",
+                          "thresholdValue": "failed",
+                          "representation": "redBright",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "==",
+                          "thresholdValue": "softpass",
+                          "representation": "red",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "Default",
+                          "thresholdValue": null,
+                          "text": "{0}{1}"
+                        }
+                      ],
+                      "customColumnWidthSetting": "10ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "any_Auth_DKIM",
+                    "formatter": 18,
+                    "formatOptions": {
+                      "thresholdsOptions": "colors",
+                      "thresholdsGrid": [
+                        {
+                          "operator": "==",
+                          "thresholdValue": "fail",
+                          "representation": "redBright",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "==",
+                          "thresholdValue": "softpass",
+                          "representation": "red",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "Default",
+                          "thresholdValue": null,
+                          "text": "{0}{1}"
+                        }
+                      ],
+                      "customColumnWidthSetting": "10ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "any_Auth_DMARC",
+                    "formatter": 18,
+                    "formatOptions": {
+                      "thresholdsOptions": "colors",
+                      "thresholdsGrid": [
+                        {
+                          "operator": "==",
+                          "thresholdValue": "fail",
+                          "representation": "redBright",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "==",
+                          "thresholdValue": "softpass",
+                          "representation": "red",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "Default",
+                          "thresholdValue": null,
+                          "text": "{0}{1}"
+                        }
+                      ],
+                      "customColumnWidthSetting": "10ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "any_Auth_CompAuth",
+                    "formatter": 18,
+                    "formatOptions": {
+                      "thresholdsOptions": "colors",
+                      "thresholdsGrid": [
+                        {
+                          "operator": "==",
+                          "thresholdValue": "fail",
+                          "representation": "redBright",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "==",
+                          "thresholdValue": "softpass",
+                          "representation": "red",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "Default",
+                          "thresholdValue": null,
+                          "text": "{0}{1}"
+                        }
+                      ],
+                      "customColumnWidthSetting": "10ch"
+                    }
+                  }
+                ]
+              }
+            },
+            "customWidth": "60",
+            "name": "Subject-BEC-Keywords"
+          }
+        ]
+      },
+      "conditionalVisibility": {
+        "parameterName": "tab",
+        "comparison": "isEqualTo",
+        "value": "suspact"
+      },
+      "name": "suspicious-group"
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 9,
+            "content": {
+              "version": "KqlParameterItem/1.0",
+              "parameters": [
+                {
+                  "id": "fd258da3-1556-41fc-b428-17122a3c8662",
+                  "version": "KqlParameterItem/1.0",
+                  "name": "TimeRange",
+                  "type": 4,
+                  "isRequired": true,
+                  "value": {
+                    "durationMs": 604800000
+                  },
+                  "typeSettings": {
+                    "selectableValues": [
+                      {
+                        "durationMs": 300000
+                      },
+                      {
+                        "durationMs": 900000
+                      },
+                      {
+                        "durationMs": 1800000
+                      },
+                      {
+                        "durationMs": 3600000
+                      },
+                      {
+                        "durationMs": 14400000
+                      },
+                      {
+                        "durationMs": 43200000
+                      },
+                      {
+                        "durationMs": 86400000
+                      },
+                      {
+                        "durationMs": 172800000
+                      },
+                      {
+                        "durationMs": 259200000
+                      },
+                      {
+                        "durationMs": 604800000
+                      },
+                      {
+                        "durationMs": 1209600000
+                      },
+                      {
+                        "durationMs": 2419200000
+                      },
+                      {
+                        "durationMs": 2592000000
+                      },
+                      {
+                        "durationMs": 5184000000
+                      },
+                      {
+                        "durationMs": 7776000000
+                      }
+                    ],
+                    "allowCustom": true
+                  }
+                },
+                {
+                  "id": "69330e1e-2163-4a9c-aaba-4709b3dd8fd4",
+                  "version": "KqlParameterItem/1.0",
+                  "name": "Operations",
+                  "label": "Activity",
+                  "type": 2,
+                  "isRequired": true,
+                  "multiSelect": true,
+                  "quote": "'",
+                  "delimiter": ",",
+                  "query": "OfficeActivity\r\n| where OfficeWorkload == 'Exchange' \r\n| summarize Count = count() by Operation\r\n| order by Count desc, Operation asc\r\n//| project Operation, Label = strcat(Operation, ' - ', Count)\r\n| project Operation",
+                  "value": [
+                    "value::all"
+                  ],
+                  "typeSettings": {
+                    "additionalResourceOptions": [
+                      "value::all"
+                    ],
+                    "selectAllValue": "All",
+                    "showDefault": false
+                  },
+                  "timeContext": {
+                    "durationMs": 0
+                  },
+                  "timeContextFromParameter": "TimeRange",
+                  "queryType": 0,
+                  "resourceType": "microsoft.operationalinsights/workspaces"
+                },
+                {
+                  "id": "d7cb90a3-0f9a-47a0-9a3f-f6694f872406",
+                  "version": "KqlParameterItem/1.0",
+                  "name": "Workload",
+                  "label": "Office Workload",
+                  "type": 2,
+                  "description": "Office Activity Workload",
+                  "isRequired": true,
+                  "multiSelect": true,
+                  "quote": "'",
+                  "delimiter": ",",
+                  "query": "OfficeActivity\n| distinct OfficeWorkload",
+                  "value": [
+                    "value::all"
+                  ],
+                  "typeSettings": {
+                    "additionalResourceOptions": [
+                      "value::all"
+                    ]
+                  },
+                  "timeContext": {
+                    "durationMs": 0
+                  },
+                  "timeContextFromParameter": "TimeRange",
+                  "queryType": 0,
+                  "resourceType": "microsoft.operationalinsights/workspaces"
+                },
+                {
+                  "id": "1119031c-7927-4946-9048-9eedd4d07129",
+                  "version": "KqlParameterItem/1.0",
+                  "name": "Mailbox",
+                  "type": 2,
+                  "isRequired": true,
+                  "multiSelect": true,
+                  "quote": "'",
+                  "delimiter": ",",
+                  "query": "OfficeActivity\n| where isnotempty(MailboxOwnerUPN)\n| distinct MailboxOwnerUPN",
+                  "value": [
+                    "value::all"
+                  ],
+                  "typeSettings": {
+                    "additionalResourceOptions": [
+                      "value::all"
+                    ],
+                    "showDefault": false
+                  },
+                  "timeContext": {
+                    "durationMs": 0
+                  },
+                  "timeContextFromParameter": "TimeRange",
+                  "queryType": 0,
+                  "resourceType": "microsoft.operationalinsights/workspaces"
+                },
+                {
+                  "id": "f96bc853-2f79-4bed-ab9b-a84c546dc0d5",
+                  "version": "KqlParameterItem/1.0",
+                  "name": "RecordType",
+                  "label": "Record Type",
+                  "type": 2,
+                  "isRequired": true,
+                  "multiSelect": true,
+                  "quote": "'",
+                  "delimiter": ",",
+                  "query": "OfficeActivity\n| distinct RecordType",
+                  "value": [
+                    "value::all"
+                  ],
+                  "typeSettings": {
+                    "additionalResourceOptions": [
+                      "value::all"
+                    ],
+                    "showDefault": false
+                  },
+                  "timeContext": {
+                    "durationMs": 2592000000
+                  },
+                  "timeContextFromParameter": "TimeRange",
+                  "queryType": 0,
+                  "resourceType": "microsoft.operationalinsights/workspaces"
+                },
+                {
+                  "id": "35ef6588-3aa6-4c4a-b50f-1f232923e6ba",
+                  "version": "KqlParameterItem/1.0",
+                  "name": "DeliverAction",
+                  "type": 2,
+                  "isRequired": true,
+                  "multiSelect": true,
+                  "quote": "'",
+                  "delimiter": ",",
+                  "query": "EmailEvents\n| distinct DeliveryAction",
+                  "value": [
+                    "Junked",
+                    "Blocked"
+                  ],
+                  "typeSettings": {
+                    "additionalResourceOptions": [
+                      "value::all"
+                    ],
+                    "showDefault": false
+                  },
+                  "timeContext": {
+                    "durationMs": 0
+                  },
+                  "timeContextFromParameter": "TimeRange",
+                  "queryType": 0,
+                  "resourceType": "microsoft.operationalinsights/workspaces"
+                },
+                {
+                  "id": "1cd63f56-fe57-485c-926d-684710f66fd8",
+                  "version": "KqlParameterItem/1.0",
+                  "name": "About",
+                  "type": 10,
+                  "description": "Explanatory Note ",
+                  "isRequired": true,
+                  "typeSettings": {
+                    "additionalResourceOptions": []
+                  },
+                  "jsonData": "[\n    \"Show\",\n    \"Hide\"\n]",
+                  "timeContext": {
+                    "durationMs": 0
+                  },
+                  "timeContextFromParameter": "TimeRange",
+                  "value": "Hide"
+                }
+              ],
+              "style": "pills",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces"
+            },
+            "name": "parameters - 1"
+          },
+          {
+            "type": 12,
+            "content": {
+              "version": "NotebookGroup/1.0",
+              "groupType": "editable",
+              "title": "About Group",
+              "items": [
+                {
+                  "type": 1,
+                  "content": {
+                    "json": "## Mailbox Activity\n\nFrom our previous research4 mention that, the Institute of Criminal Justice Studies examines the complex money laundering methodologies adopted by BEC cybercriminals similar to those methods used to finance the 9/11 terrorist attacks and how law enforcement agencies and the private sector can work together to disrupt the organized criminal groups behind these cybercrimes. Similar to the Attack Kill Chain model, this paper also created a unique threat intelligence term for BEC, the Financial Fraud Kill Chain (FFKC).\n\nIn March 2020, the FBI Cyber Division published a Private Industry Notification5 (the Notification) to help cybersecurity professionals and system administrators guard against the persistent malicious actions of cybercriminals. They disclosed that cybercriminals conduct BEC through the exploitation of cloud-based email services of Microsoft Office 365 and Google G Suite, costing US business over 2 billion dollars.",
+                    "style": "info"
+                  },
+                  "name": "about-note"
+                },
+                {
+                  "type": 1,
+                  "content": {
+                    "json": "## Explanatory Note \n\nThe BEC scams are initiated through specifically developed phishing kits designed to mimic the cloud-based email services to collect credentials from victims.\n\nFollowing similar findings in FFKC, the Notification also described the Tactics, Techniques, and Procedures (TTP) of BEC cyber-criminals.\n\nFirst, they deploy phishing kits to the organization with large batches of emails. Upon compromising victim email accounts, they review the address books of compromised accounts for the pivot to multiple victims and analyze the content to search for evidence of financial transactions. Then, they create mailbox forward rules to an outside email account and delete key messages from compromised accounts.\n\nAfter collecting sufficient understanding of the targeted organization’s corporate structure and persons involved in handling financial transactions, cyber-criminal creates lookalike domains of the targeted accounts, modify the “From” and “Reply-To” fields of the email message threads, and send impersonate email communications to the person to request pending or future payments.",
+                    "style": "upsell"
+                  },
+                  "name": "text - 19"
+                },
+                {
+                  "type": 1,
+                  "content": {
+                    "json": "### [DATC] - Exchange Workbook (by: Frankie Li)\n\nI design the workbook. Some queries are modified from examples from Microsoft or Microsoft Sentinel Communities. The community, organizations, and business entities can freely use all my works. However, if any MSP wants to use my work for business purposes, please get in touch with frankie@dragonadvancetech.com for permission before deploying it to your client's tenant.\n\n![Image Name](https://www.borza.com/clogo/dragonadvancetech.com.png?width=85&height=30) ",
+                    "style": "success"
+                  },
+                  "name": "text - 20"
+                }
+              ]
+            },
+            "conditionalVisibility": {
+              "parameterName": "About",
+              "comparison": "isEqualTo",
+              "value": "Show"
+            },
+            "name": "AboutGroup"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "//Hard delete operations over time\r\nOfficeActivity\r\n| where OfficeWorkload == 'Exchange' and Operation contains 'HardDelete'\r\n| where RecordType in ({RecordType})\r\n| where MailboxOwnerUPN in ({Mailbox})\r\n| summarize count() by bin_at(TimeGenerated, 1d, now()), UserId",
+              "size": 1,
+              "title": "Hard delete activities",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "barchart"
+            },
+            "name": "query - 8"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "let OperationsData = OfficeActivity\r\n| where OfficeWorkload in ({Workload})\r\n| where RecordType in ({RecordType})\r\n//| where MailboxOwnerUPN in ({Mailbox})\r\n| where Operation in (\"Set-Mailbox\", \"Log-on\", 'Add-MailboxPermission', 'UpdateFolderPermissions', 'Remove-MailboxPermission')\r\n| extend Category = case( Operation == \"Set-Mailbox\", \"Mailbox creation\",\r\n                                Operation == \"Log-on\", \"Log-in\",\r\n                                Operation == \"Add-MailboxPermission\" or Operation == \"UpdateFolderPermissions\" or Operation == \"Remove-MailboxPermission\", \"Permission activities\",\r\n                                \"\");\r\nOperationsData\r\n| summarize Count = count() by Category\r\n| join kind = inner (OperationsData\r\n | make-series Trend = count() default = 0 on bin(TimeGenerated, 1d) from {TimeRange:start} to {TimeRange:end} step {TimeRange:grain} by Category)\r\n on Category\r\n | project-away Category1, TimeGenerated\r\n| extend Categorys = Category\r\n| union (\r\n OperationsData\r\n | summarize Count = count() \r\n | extend jkey = 1\r\n | join kind=inner (OperationsData\r\n | make-series Trend = count() default = 0 on TimeGenerated from {TimeRange:start} to {TimeRange:end} step {TimeRange:grain}\r\n | extend jkey = 1) on jkey\r\n | extend Category = 'All', Categorys = '*' \r\n)\r\n| order by Count desc\r\n| take 10",
+              "size": 4,
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "tiles",
+              "tileSettings": {
+                "titleContent": {
+                  "columnMatch": "Category",
+                  "formatter": 1,
+                  "formatOptions": {
+                    "showIcon": true
+                  }
+                },
+                "leftContent": {
+                  "columnMatch": "Count",
+                  "formatter": 12,
+                  "formatOptions": {
+                    "palette": "auto",
+                    "showIcon": true
+                  },
+                  "numberFormat": {
+                    "unit": 17,
+                    "options": {
+                      "style": "decimal",
+                      "maximumFractionDigits": 2,
+                      "maximumSignificantDigits": 3
+                    }
+                  }
+                },
+                "secondaryContent": {
+                  "columnMatch": "Trend",
+                  "formatter": 9,
+                  "formatOptions": {
+                    "palette": "gray",
+                    "showIcon": true
+                  }
+                },
+                "showBorder": false
+              }
+            },
+            "customWidth": "50",
+            "name": "query - 15"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "//Mailbox permissions changes\r\nlet PermissionKeywords = dynamic(['Add-MailboxFolderPermission', 'Add-MailboxPermission', 'Add-RecipientPermission', 'AddFolderPermissions', 'ModifyFolderPermissions', 'RemoveFolderPermissions', 'Set-MailboxFolderPermission', 'UpdateFolderPermissions']);\r\nOfficeActivity\r\n//| where OfficeWorkload == 'Exchange' and Operation in ('Add-MailboxPermission', 'UpdateFolderPermissions', 'Remove-MailboxPermission')\r\n| where OfficeWorkload == 'Exchange' and Operation has_any (PermissionKeywords)\r\n| where MailboxOwnerUPN in ({Mailbox})\r\n| summarize count() by Operation\r\n| sort by count_",
+              "size": 0,
+              "title": "Mailbox permissions changes",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "piechart"
+            },
+            "customWidth": "50",
+            "name": "query - 13"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "// [DATC] - Parsing an individual MailItemsAccessed of an email message\n// Created on: 27-07-2022, 28-07-2022\n// By: Frankie \n// https://docs.microsoft.com/en-us/microsoft-365/compliance/mailitemsaccessed-forensics-investigations?view=o365-worldwide\nOfficeActivity\n| where MailboxOwnerUPN in ({Mailbox})\n| where RecordType in ({RecordType})\n| mv-expand Folders = todynamic(Folders)\n| mv-expand OperProp = todynamic(OperationProperties)\n| where Operation == \"MailItemsAccessed\" \n//| where tostring(OperProp.Value) == \"Bind\"\n| mv-expand FolderItem = todynamic(Folders.FolderItems) \n| project AccessTime = TimeGenerated, Mailbox = MailboxOwnerUPN, AccessType = OperProp.Name, BindAccess = OperProp.Value, ResultStatus, ClientIP, ClientInfoString, MessageId = FolderItem.InternetMessageId\n",
+              "size": 0,
+              "title": "An Individual email message accessed",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "AccessTime",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "12ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Mailbox",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "AccessType",
+                    "formatter": 18,
+                    "formatOptions": {
+                      "thresholdsOptions": "colors",
+                      "thresholdsGrid": [
+                        {
+                          "operator": "==",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "==",
+                          "thresholdValue": "IsThrottled",
+                          "representation": "pink",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "Default",
+                          "thresholdValue": null,
+                          "text": "{0}{1}"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "columnMatch": "BindAccess",
+                    "formatter": 18,
+                    "formatOptions": {
+                      "thresholdsOptions": "colors",
+                      "thresholdsGrid": [
+                        {
+                          "operator": "==",
+                          "thresholdValue": "Bind",
+                          "representation": "purple",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "==",
+                          "thresholdValue": "IsThrottled",
+                          "representation": "pink",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "Default",
+                          "thresholdValue": null,
+                          "representation": "blue",
+                          "text": "{0}{1}"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "columnMatch": "ClientIP",
+                    "formatter": 5
+                  },
+                  {
+                    "columnMatch": "ClientInfoString",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "25ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "MessageId",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "30ch"
+                    }
+                  }
+                ]
+              }
+            },
+            "customWidth": "70",
+            "name": "AnMessageAccessed"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "// [DATC] - Parsing an individual MailItemsAccessed of an email message\n// Created on: 27-07-2022, 28-07-2022\n// By: Frankie \n// https://docs.microsoft.com/en-us/microsoft-365/compliance/mailitemsaccessed-forensics-investigations?view=o365-worldwide\nOfficeActivity\n| where MailboxOwnerUPN in ({Mailbox})\n| where RecordType in ({RecordType})\n| mv-expand Folders = todynamic(Folders)\n| mv-expand OperProp = todynamic(OperationProperties)\n| where Operation == \"MailItemsAccessed\" \n| where tostring(OperProp.Value) == \"Bind\"\n| mv-expand FolderItem = todynamic(Folders.FolderItems) \n//| project AccessTime = TimeGenerated, Mailbox = MailboxOwnerUPN, MessageId = FolderItem.InternetMessageId, AccessType = OperProp.Name, BindAccess = OperProp.Value, ResultStatus, ClientIP, ClientInfoString\n| summarize Count = count() by Mailbox = MailboxOwnerUPN\n",
+              "size": 0,
+              "title": "Bind Access by Users",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "piechart"
+            },
+            "customWidth": "25",
+            "name": "BindAccess-User"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "// [DATC] - Phishing or Spam Detections but Delivered or Junked\nlet DeliverKeywords = dynamic([\"Delivered\", \"Junked\"]);\nEmailEvents \n//| where (ConfidenceLevel contains \"Phish\" or ConfidenceLevel contains \"Spam\") and EmailDirection != \"Outbound\"\n| where RecipientEmailAddress in ({Mailbox})\n//| where DeliveryAction has_any (DeliverKeywords)\n| where DeliveryAction in ({DeliverAction})\n| extend Auth = todynamic(AuthenticationDetails)\n| extend Auth.SPF, Auth.DKIM, Auth.DMARC, Auth.CompAuth\n| extend Method = todynamic(DetectionMethods)\n| extend Method.Phish, Method.Spam\n| project Timestamp, FromDomain = SenderFromDomain, IpAddress = SenderIPv4, Mailbox = RecipientEmailAddress, DeliveryAction, DeliveryLocation, DetectedPhish = Method_Phish.[0], DetectedSpam = Method_Spam.[0], Auth_SPF, Auth_DKIM, Auth_DMARC, Auth_CompAuth\n",
+              "size": 0,
+              "title": "Delivered Phishing or Spam in Junk",
+              "timeContext": {
+                "durationMs": 604800000
+              },
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "table",
+              "gridSettings": {
+                "formatters": [
+                  {
+                    "columnMatch": "Timestamp",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "12ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "FromDomain",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "20ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "IpAddress",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "18ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Mailbox",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "20ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "DeliveryAction",
+                    "formatter": 18,
+                    "formatOptions": {
+                      "thresholdsOptions": "colors",
+                      "thresholdsGrid": [
+                        {
+                          "operator": "==",
+                          "thresholdValue": "Junked",
+                          "representation": "redDark",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "==",
+                          "thresholdValue": "Delivered",
+                          "representation": "green",
+                          "text": "{0}{1}"
+                        },
+                        {
+                          "operator": "Default",
+                          "thresholdValue": null,
+                          "text": "{0}{1}"
+                        }
+                      ],
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "DeliveryLocation",
+                    "formatter": 5
+                  },
+                  {
+                    "columnMatch": "DetectedPhish",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "DetectedSpam",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Auth_SPF",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "10ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Auth_DKIM",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "10ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Auth_DMARC",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "10ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "Auth_CompAuth",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "10ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "RecipientEmailAddress",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "SenderFromDomain",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "15ch"
+                    }
+                  },
+                  {
+                    "columnMatch": "SenderIPv4",
+                    "formatter": 0,
+                    "formatOptions": {
+                      "customColumnWidthSetting": "18ch"
+                    }
+                  }
+                ]
+              }
+            },
+            "customWidth": "75",
+            "name": "Delivered-Junk"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "// [DATC] - Phishing or Spam Detections but Delivered or Junked\nlet DeliverKeywords = dynamic([\"Junked\"]);\nEmailEvents \n//| where (ConfidenceLevel contains \"Phish\" or ConfidenceLevel contains \"Spam\") and EmailDirection != \"Outbound\"\n| where RecipientEmailAddress in ({Mailbox})\n//| where DeliveryAction has_any (DeliverKeywords)\n| where DeliveryAction in ({DeliverAction})\n| extend Auth = todynamic(AuthenticationDetails)\n| extend Auth.SPF, Auth.DKIM, Auth.DMARC, Auth.CompAuth\n| extend Method = todynamic(DetectionMethods)\n| extend Method.Phish, Method.Spam\n//| project Timestamp, FromDomain = SenderFromDomain, IpAddress = SenderIPv4, Mailbox = RecipientEmailAddress, DeliveryAction, DeliveryLocation, DetectedPhish = Method_Phish.[0], DetectedSpam = Method_Spam.[0], Auth_SPF, Auth_DKIM, Auth_DMARC, Auth_CompAuth\n| summarize Counts = count() by tostring(Auth.CompAuth), tostring(Auth.SPF), tostring(Auth.DKIM), tostring(Auth.DMARC)",
+              "size": 0,
+              "title": "Statistics of {DeliverAction}",
+              "timeContextFromParameter": "TimeRange",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "visualization": "piechart"
+            },
+            "customWidth": "25",
+            "name": "Junked-chart"
+          }
+        ]
+      },
+      "conditionalVisibility": {
+        "parameterName": "tab",
+        "comparison": "isEqualTo",
+        "value": "mailact"
+      },
+      "name": "mailbox-group"
+    }
+  ],
+  "fallbackResourceIds": [
+    ""
+  ],
+  "fromTemplateId": "sentinel-UserWorkbook",
+  "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
+}

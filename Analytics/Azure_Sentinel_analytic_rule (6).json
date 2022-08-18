@@ -1,0 +1,82 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/b6376be5-09b4-4769-8532-a9d33336ef9d')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/b6376be5-09b4-4769-8532-a9d33336ef9d')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2021-10-01-preview",
+            "properties": {
+                "displayName": "[DATC] Suspicious Outlook Inbox Rule (New-InboxRule\", \"Set-InboxRule)",
+                "description": "Adversaries may creating an inbox rule to automatically forward emails containing “WeTransfer” in the email subject or body to the “RSS subscriptions” folder of the victim’s mailbox.organization to use as part of further exploits or operations.",
+                "severity": "Medium",
+                "enabled": true,
+                "query": "// [DATC] - Detect Inbox Rules in Exchange Online \n// Created on: 12-06-2022, 16-07-2022\n// By: Frankie : \n// https://attack.mitre.org/techniques/T1114/003/\n// https://us-cert.cisa.gov/ncas/alerts/aa20-301a\n// https://us-cert.cisa.gov/ncas/alerts/TA18-086A\n// https://expel.com/blog/seven-ways-to-spot-business-email-compromise-office-365/\nlet starttime = 7d;\nlet endtime = 1d;\nOfficeActivity \n| where TimeGenerated > ago(starttime)\n| where OfficeWorkload == \"Exchange\" \n| where not(UserId contains \"Microsoft.Exchange.Servicehost\")\n| where Operation in~ (\"Get-InboxRule\", \"New-InboxRule\", \"Set-InboxRule\", \"Enable-InboxRule\", \"Remove-InboxRule\", \"Disable-InboxRule\")\n| where Parameters contains \"MarkAsRead\" or Parameters contains \"Delete\" or Parameters contains \"Forward\" or Parameters contains \"RSS\"\n| extend IPv4 = tostring(extract_all(@\"((?:[0-9]{1,3}\\.){3}[0-9]{1,3})\", ClientIP)[0])\n| mv-expand bagexpansion = array todynamic(Parameters)\n| extend Key=tostring(Parameters.Name), Value=Parameters.Value\n| project TimeGenerated, Operation, IPv4, Key, Value, UserId",
+                "queryFrequency": "PT6H",
+                "queryPeriod": "PT6H",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": [
+                    "Collection"
+                ],
+                "techniques": [],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": true,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": {
+                    "alertDisplayNameFormat": "[DATC] M365 - {{UserId}} Mailbox Rules",
+                    "alertDescriptionFormat": "Mailbox Rules",
+                    "alertTacticsColumnName": "IPv4",
+                    "alertSeverityColumnName": "Operation"
+                },
+                "customDetails": {
+                    "Operation": "Operation",
+                    "Key": "Key"
+                },
+                "entityMappings": [
+                    {
+                        "entityType": "IP",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Address",
+                                "columnName": "IPv4"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Name",
+                                "columnName": "UserId"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null
+            }
+        }
+    ]
+}

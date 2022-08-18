@@ -1,0 +1,86 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/214b599f-d7d0-472a-9c64-db1152d4f35c')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/214b599f-d7d0-472a-9c64-db1152d4f35c')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2021-10-01-preview",
+            "properties": {
+                "displayName": "[DATC] Detect Inbound Messages Subject line contains BEC keywords",
+                "description": "[DATC] - Detect Deduplicated Inbound Messages Subject line contains BEC keywords",
+                "severity": "Informational",
+                "enabled": false,
+                "query": "// [DATC] - Detect Deduplicated Inbound Messages Subject line contains BEC keywords\n// Created on: 12-06-2022, 16-07-2022\n// By: Frankie\n// https://expel.com/blog/seven-ways-to-spot-business-email-compromise-office-365/\nlet starttime = 1d;\nlet endtime = 1d;\nEmailEvents\n| where TimeGenerated > ago(starttime)\n| where DeliveryAction == \"Delivered\" and DeliveryLocation == \"Inbox/folder\" and EmailDirection == \"Inbound\"\n| where Subject contains \"Wire\" or Subject contains \"Invoice\" or Subject contains \"Payroll\" or Subject contains \"Deposit\" or Subject contains \"Payment\" or Subject contains \"Cash\" \n| extend Auth = todynamic(AuthenticationDetails)\n| extend Auth.SPF, Auth.DKIM, Auth.DMARC, Auth.CompAuth\n// | project Auth_SPF, Auth_DKIM, Auth_DMARC, Auth_CompAuth\n// | project Subject, SenderIPv4, RecipientEmailAddress, SenderFromAddress, SenderFromDomain\n| summarize any(SenderIPv4, RecipientEmailAddress, SenderFromAddress, SenderFromDomain, Auth_SPF, Auth_DKIM, Auth_DMARC, Auth.CompAuth) by Subject\n",
+                "queryFrequency": "P1D",
+                "queryPeriod": "P1D",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": [],
+                "techniques": [],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": {
+                    "SPF": "any_Auth_SPF",
+                    "DKIM": "any_Auth_DKIM",
+                    "DMARC": "any_Auth_DMARC",
+                    "Recipient": "any_RecipientEmailAddress"
+                },
+                "entityMappings": [
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Name",
+                                "columnName": "any_SenderFromAddress"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "IP",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Address",
+                                "columnName": "any_SenderIPv4"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "DNS",
+                        "fieldMappings": [
+                            {
+                                "identifier": "DomainName",
+                                "columnName": "any_SenderFromDomain"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null
+            }
+        }
+    ]
+}

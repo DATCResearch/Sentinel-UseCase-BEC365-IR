@@ -1,0 +1,90 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/aa5a7cf6-106c-4e9f-ab0e-d4f2a3d83183')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/aa5a7cf6-106c-4e9f-ab0e-d4f2a3d83183')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2021-10-01-preview",
+            "properties": {
+                "displayName": "[DATC] MFA disabled for a user (AuditLogs)",
+                "description": "Multi-Factor Authentication (MFA) helps prevent credential compromise. This alert identifies when an attempt has been made to disable MFA for a user ",
+                "severity": "Medium",
+                "enabled": true,
+                "query": "// [DATC] - MFA Disabled for an User\n// Created on: 12-06-2022, 16-07-2022\n// By: Frankie : \n// https://github.com/Azure/Azure-Sentinel/blob/master/Detections/MultipleDataSources/MFADisable.yaml\n(union isfuzzy=true\n    (AuditLogs \n    | where OperationName =~ \"Disable Strong Authentication\"\n    | extend IPAddress = tostring(parse_json(tostring(InitiatedBy.user)).ipAddress) \n    | extend InitiatedByUser = iff(isnotempty(tostring(parse_json(tostring(InitiatedBy.user)).userPrincipalName)), \n        tostring(parse_json(tostring(InitiatedBy.user)).userPrincipalName), tostring(parse_json(tostring(InitiatedBy.app)).displayName))\n    | extend Targetprop = todynamic(TargetResources)\n    | extend TargetUser = tostring(Targetprop[0].userPrincipalName) \n    | summarize StartTimeUtc = min(TimeGenerated), EndTimeUtc = max(TimeGenerated)\n        by\n        User = TargetUser,\n        InitiatedByUser,\n        Operation = OperationName,\n        CorrelationId,\n        IPAddress,\n        Category,\n        Source = SourceSystem,\n        AADTenantId,\n        Type\n    )\n)\n| extend timestamp = StartTimeUtc, AccountCustomEntity = User, IPCustomEntity = IPAddress\n",
+                "queryFrequency": "PT6H",
+                "queryPeriod": "PT6H",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": [
+                    "CredentialAccess",
+                    "Persistence"
+                ],
+                "techniques": [
+                    "T1098",
+                    "T1556"
+                ],
+                "alertRuleTemplateName": "65c78944-930b-4cae-bd79-c3664ae30ba7",
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": {
+                    "Operation": "Operation"
+                },
+                "entityMappings": [
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Name",
+                                "columnName": "AccountCustomEntity"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "IP",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Address",
+                                "columnName": "IPCustomEntity"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Name",
+                                "columnName": "InitiatedByUser"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null,
+                "templateVersion": "1.0.2"
+            }
+        }
+    ]
+}

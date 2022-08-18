@@ -1,0 +1,72 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/4e5d0784-a1d4-4e24-8509-861b42b6d26f')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/4e5d0784-a1d4-4e24-8509-861b42b6d26f')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2021-10-01-preview",
+            "properties": {
+                "displayName": "[DATC] - Detect unlikely Travel (AAD P2, required)",
+                "description": "This hunting query will alert on any unlikely  travel activity by referring to the AAD User Risk Events (AAD P2, required)",
+                "severity": "Medium",
+                "enabled": true,
+                "query": "// [DATC] - Detect unlikely Travel by referring to the AAD User Risk Events (AAD P2, required)\n// Created on: 12-07-2022, 31-07-2022\n// By: Frankie \n//let RiskKeywords = dynamic([\"Low\", \"Medium\", \"High\"]);\n//let evtKeywords = dynamic([\"generic\", \"unfamiliarFeatures\", \"unlikelyTravel\", \"anonymizedIPAddress\"]);\nlet RiskKeywords = dynamic([\"hidden\", \"medium\", \"high\"]);\nlet evtKeywords = dynamic([\"unfamiliarFeatures\", \"unlikelyTravel\"]);\nAADUserRiskEvents\n| mv-expand AdditionalInfo\n| mv-expand Location\n| where RiskDetail has_any (RiskKeywords)\n| where RiskEventType has_any (evtKeywords)\n| where isnotempty(Location.countryOrRegion) and isnotempty(AdditionalInfo.Value)\n| project TimeGenerated, UserDisplayName, RiskLevel, RiskEventType, IpAddress, Location.countryOrRegion, AdditionalInfo.Value, UserPrincipalName\n",
+                "queryFrequency": "P1D",
+                "queryPeriod": "P1D",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": [],
+                "techniques": [],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Name",
+                                "columnName": "UserPrincipalName"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "IP",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Address",
+                                "columnName": "IpAddress"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null
+            }
+        }
+    ]
+}

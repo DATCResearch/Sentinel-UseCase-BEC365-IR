@@ -1,0 +1,86 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/960929b3-28d3-42b5-a8b1-c4df60a76500')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/960929b3-28d3-42b5-a8b1-c4df60a76500')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2021-10-01-preview",
+            "properties": {
+                "displayName": "[DATC] MFA Explicit  Deny (SignInLogs, ResultType in \"500121\")",
+                "description": "User explicitly denies MFA push, indicating that login was not expected and the account's password may be compromised.",
+                "severity": "Medium",
+                "enabled": true,
+                "query": "// [DATC] - Explicit MFA Deny\n// Created on: 12-06-2022, 22-07-2022\n// By: Frankie \n// https://github.com/Azure/Azure-Sentinel/blob/master/Detections/SigninLogs/ExplicitMFADeny.yaml\nlet aadFunc = (tableName: string) {\n    table(tableName)\n    | where ResultType in (\"500121\", \"50074\", \"50076\")\n    | where UserDisplayName != UserPrincipalName\n    //| summarize count() by ResultType, ResultDescription, ResourceDisplayName, AccountCustomEntity = UserPrincipalName, IPCustomEntity = IPAddress, URLCustomEntity = ClientAppUsed\n    //| sort by count_ desc \n    | project timestamp = TimeGenerated, ResultType, ResultDescription, ResourceDisplayName, AccountCustomEntity = UserPrincipalName,  IPCustomEntity = IPAddress, URLCustomEntity = ClientAppUsed\n};\nlet aadSignin = aadFunc(\"SigninLogs\");\nlet aadNonInt = aadFunc(\"AADNonInteractiveUserSignInLogs\");\nunion isfuzzy=true aadSignin, aadNonInt",
+                "queryFrequency": "P1D",
+                "queryPeriod": "P1D",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": [
+                    "CredentialAccess"
+                ],
+                "techniques": [
+                    "T1110"
+                ],
+                "alertRuleTemplateName": "a22740ec-fc1e-4c91-8de6-c29c6450ad00",
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Name",
+                                "columnName": "AccountCustomEntity"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "IP",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Address",
+                                "columnName": "IPCustomEntity"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "URL",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Url",
+                                "columnName": "URLCustomEntity"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null,
+                "templateVersion": "1.0.1"
+            }
+        }
+    ]
+}

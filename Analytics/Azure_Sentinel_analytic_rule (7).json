@@ -1,0 +1,79 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/1a0a82e3-bbe4-4258-8ab7-f128dba3bbfe')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/1a0a82e3-bbe4-4258-8ab7-f128dba3bbfe')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2021-10-01-preview",
+            "properties": {
+                "displayName": "[DATC] Detect Users Emailbox Forwarding Rules (\"ForwardTo\", \"RedirectTo\")",
+                "description": "Identifies when multiple (more than one) users mailboxes are configured to forward to the same destination. \nThis could be an attacker-controlled destination mailbox configured to collect mail from multiple compromised user accounts.",
+                "severity": "Low",
+                "enabled": true,
+                "query": "// [DATC] - Multiple users email forwarded to same destination\n// Created on: 12-06-2022, 16-07-2022\n// By: Frankie : \n// https://katystech.blog/azure/azure-ad-log-analytics \nlet queryfrequency = 1d;\nlet queryperiod = 7d;\nOfficeActivity\n| where TimeGenerated > ago(queryperiod)\n| where OfficeWorkload =~ \"Exchange\"\n| where not(UserId contains \"Microsoft.Exchange.Servicehost\")\n// | where Operation in~ (\"Get-InboxRule\", \"New-InboxRule\", \"Set-InboxRule\", \"Enable-InboxRule\", \"Remove-InboxRule\", \"Disable-InboxRule\")\n| where Operation in (\"Set-Mailbox\", \"New-InboxRule\", \"Set-InboxRule\", \"Get-InboxRule\", \"New-InboxRule\", \"Set-InboxRule\", \"Enable-InboxRule\")\n// | mv-expand  Para = todynamic(Parameters)\n// | extend ParaName = Para['Name']\n// | extend ParaValue = Para['Value']\n// | where ParaName contains \"Read\"\n// | project TimeGenerated, UserId, ClientIP, ParaName, ParaValue\n| where Parameters has_any (\"ForwardTo\", \"RedirectTo\", \"ForwardingSmtpAddress\")\n| mv-apply DynamicParameters = todynamic(Parameters) on (summarize ParsedParameters = make_bag(pack(tostring(DynamicParameters.Name), DynamicParameters.Value)))\n| evaluate bag_unpack(ParsedParameters, columnsConflict='replace_source')\n| extend DestinationMailAddress = tolower(case(\nisnotempty(column_ifexists(\"ForwardTo\", \"\")), column_ifexists(\"ForwardTo\", \"\"),\nisnotempty(column_ifexists(\"RedirectTo\", \"\")), column_ifexists(\"RedirectTo\", \"\"),\nisnotempty(column_ifexists(\"ForwardingSmtpAddress\", \"\")), trim_start(@\"smtp:\", column_ifexists(\"ForwardingSmtpAddress\", \"\")),\n\"\"))\n| where isnotempty(DestinationMailAddress)\n| mv-expand split(DestinationMailAddress, \";\")\n| extend ClientIPValues = extract_all(@'\\[?(::ffff:)?(?P<IPAddress>(\\d+\\.\\d+\\.\\d+\\.\\d+)|[^\\]]+)\\]?([-:](?P<Port>\\d+))?', dynamic([\"IPAddress\", \"Port\"]), ClientIP)[0]\n| extend ClientIP = tostring(ClientIPValues[0]), Port = tostring(ClientIPValues[1])\n| summarize StartTime = min(TimeGenerated), EndTime = max(TimeGenerated), DistinctUserCount = dcount(UserId), UserId = make_set(UserId, 250), Ports = make_set(Port, 250), EventCount = count() by tostring(DestinationMailAddress), ClientIP\n| where DistinctUserCount > 1 and EndTime > ago(queryfrequency)\n| mv-expand UserId to typeof(string)\n| extend timestamp = StartTime, AccountCustomEntity = UserId, IPCustomEntity = ClientIP",
+                "queryFrequency": "P1D",
+                "queryPeriod": "P7D",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": [
+                    "Collection",
+                    "Exfiltration"
+                ],
+                "techniques": [
+                    "T1114",
+                    "T1020"
+                ],
+                "alertRuleTemplateName": "871ba14c-88ef-48aa-ad38-810f26760ca3",
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Name",
+                                "columnName": "AccountCustomEntity"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "IP",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Address",
+                                "columnName": "IPCustomEntity"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null,
+                "templateVersion": "1.0.1"
+            }
+        }
+    ]
+}

@@ -1,0 +1,84 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/5b41dc53-f7a1-4891-b706-253bb92351cb')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/5b41dc53-f7a1-4891-b706-253bb92351cb')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2021-10-01-preview",
+            "properties": {
+                "displayName": "[DATC] Suspicious login followed by Office 365 Operations (MailItemAccess | Rules)",
+                "description": "Detects anomalous IP address usage by user accounts and then checks to see if a suspicious O365 action is performed. Query calculates IP usage Delta for each user account and selects accounts where a delta >= 90% is observed between the most and least used IP. To further reduce results the query performs a prevalence check on the lowest used IP's country, only keeping IP's where the country is unusual for the tenant (dynamic ranges). Finally the user accounts activity within O365 logs is checked for suspicious commands (modifying user privileges or admin actions) during the period the suspicious IP was active.",
+                "severity": "Medium",
+                "enabled": true,
+                "query": "// [DATC] - Anomalous login followed by Office 365 Operations (Default is Teams Actions) \n// Created on: 12-06-2022, 16-07-2022\n// By: Frankie \n// https://katystech.blog/azure/azure-ad-log-analytics \n// https://docs.microsoft.com/en-us/exchange/policy-and-compliance/mailbox-audit-logging/mailbox-audit-logging?view=exchserver-2019\n// https://www.techtarget.com/searchwindowsserver/tip/Learn-to-work-with-the-Office-365-unified-audit-log\n//\n//The bigger the window the better the data sample size, as we use IP prevalence, more sample data is better.\n//The minimum number of countries that the account has been accessed from [default: 2]\nlet minimumCountries = 2;\n//The delta (%) between the largest in-use IP and the smallest [default: 95]\nlet deltaThreshold = 95;\n//The maximum (%) threshold that the country appears in login data [default: 10]\nlet countryPrevalenceThreshold = 10;\n//The time to project forward after the last login activity [default: 60min]\nlet projectedEndTime = 60m;\nlet queryfrequency = 1d;\nlet queryperiod = 14d;\nlet aadFunc = (tableName: string) {\n    // Get successful signins to Office 365\n    let signinData =\n        table(tableName)\n        | where TimeGenerated > ago(queryperiod)\n    //  | where AppDisplayName has \"Office 365\"\n        | extend Country = tostring(todynamic(LocationDetails)['countryOrRegion'])\n        | where isnotempty(Country) and isnotempty(IPAddress);\n    // Calculate prevalence of countries\n    let countryPrevalence =\n        signinData\n        | summarize CountCountrySignin = count() by Country\n        | extend TotalSignin = toscalar(signinData\n            | summarize count())\n        | extend CountryPrevalence = toreal(CountCountrySignin) / toreal(TotalSignin) * 100;\n    // Count signins by user and IP address\n    let userIpSignin =\n        signinData\n        | summarize\n            CountIPSignin = count(),\n            Country = any(Country),\n            ListSigninTimeGenerated = make_list(TimeGenerated)\n            by IPAddress, UserPrincipalName;\n    // Calculate delta between the IP addresses with the most and minimum activity by user\n    let userIpDelta =\n        userIpSignin\n        | summarize\n            MaxIPSignin = max(CountIPSignin),\n            MinIPSignin = min(CountIPSignin),\n            DistinctCountries = dcount(Country),\n            make_set(Country)\n            by UserPrincipalName\n        | extend UserIPDelta = toreal(MaxIPSignin - MinIPSignin) / toreal(MaxIPSignin) * 100;\n    // Collect Office 365 operations the user account has performed within a time range of the suspicious signins\n    OfficeActivity\n    | where TimeGenerated > ago(queryfrequency)\n    // | where Operation in~ (\"HardDelete\", \"SoftDelete\", \"UpdateInboxRules\", \"MailItemsAccessed\", \"MessageBind\", \"SendAs\")\n    | project OperationTimeGenerated = TimeGenerated, UserId = tolower(UserId), Operation\n    | join kind = inner(\n        userIpDelta\n        // Check users with activity from distinct countries\n        | where DistinctCountries >= minimumCountries\n        // Check users with high IP delta\n        | where UserIPDelta >= deltaThreshold\n        // Add information about signins and countries\n        | join kind = leftouter userIpSignin on UserPrincipalName\n        | join kind = leftouter countryPrevalence on Country\n        // Check activity that comes from nonprevalent countries\n        | where CountryPrevalence < countryPrevalenceThreshold\n        | project\n            UserPrincipalName,\n            SuspiciousIP = IPAddress,\n            UserIPDelta,\n            SuspiciousSigninCountry = Country,\n            SuspiciousCountryPrevalence = CountryPrevalence,\n            EventTimes = ListSigninTimeGenerated\n        )\n        on $left.UserId == $right.UserPrincipalName\n    // Check the signins occured 60 min before the Teams operations\n    | mv-expand SigninTimeGenerated = EventTimes\n    | extend SigninTimeGenerated = todatetime(SigninTimeGenerated)\n    | where OperationTimeGenerated between (SigninTimeGenerated .. (SigninTimeGenerated + projectedEndTime))\n};\nlet aadSignin = aadFunc(\"SigninLogs\");\nlet aadNonInt = aadFunc(\"AADNonInteractiveUserSignInLogs\");\nunion isfuzzy=true aadSignin, aadNonInt\n| summarize arg_max(SigninTimeGenerated, *) by UserPrincipalName, SuspiciousIP, OperationTimeGenerated\n| summarize\n    ActivitySummary = make_bag(pack(tostring(SigninTimeGenerated), pack(\"Operation\", tostring(Operation), \"OperationTime\", OperationTimeGenerated)))\n    by\n    UserPrincipalName,\n    SuspiciousIP,\n    SuspiciousSigninCountry,\n    SuspiciousCountryPrevalence\n| extend IPCustomEntity = SuspiciousIP, AccountCustomEntity = UserPrincipalName",
+                "queryFrequency": "P1D",
+                "queryPeriod": "P14D",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": [
+                    "InitialAccess",
+                    "Persistence"
+                ],
+                "techniques": [
+                    "T1199",
+                    "T1136",
+                    "T1078",
+                    "T1098"
+                ],
+                "alertRuleTemplateName": "2b701288-b428-4fb8-805e-e4372c574786",
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": {
+                    "SigninCountry": "SuspiciousSigninCountry",
+                    "PrevalenceCountry": "SuspiciousCountryPrevalence"
+                },
+                "entityMappings": [
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "FullName",
+                                "columnName": "AccountCustomEntity"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "IP",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Address",
+                                "columnName": "IPCustomEntity"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null,
+                "templateVersion": "1.0.1"
+            }
+        }
+    ]
+}

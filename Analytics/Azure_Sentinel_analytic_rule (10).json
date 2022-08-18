@@ -1,0 +1,84 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/8f0c4ad0-b6bc-4847-8e28-5843233d308b')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/8f0c4ad0-b6bc-4847-8e28-5843233d308b')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2021-10-01-preview",
+            "properties": {
+                "displayName": "[DATC] Suspicious Azure AD Configuration",
+                "description": "O365 Attack Toolkit allows operators to perform oauth phishing attacks. Currently,some parts of these activites can be detected in this rule\n- Interactive E-mail Search\n- Send E-mails\n- File Search\n- Document Replacing\n\n",
+                "severity": "Low",
+                "enabled": true,
+                "query": "// https://github.com/mdsecactivebreach/o365-attack-toolkit\n// https://docs.microsoft.com/en-us/azure/active-directory/reports-monitoring/reference-audit-activities \n// [DATC] - Any AD configuration activities performed by tenant members during passed 7d\n// Frankie: 3-7-22\nlet detectionTime = 1d;\nlet joinLookback = 7d;\nAuditLogs\n| where LoggedByService != \"\" \n| where InitiatedBy.user.userPrincipalName contains \"Ally-Bridge\"\n| extend IpAddress = iff(isnotempty(InitiatedBy.user.ipAddress), tostring(InitiatedBy.user.ipAddress), tostring(InitiatedBy.app.ipAddress))\n| extend InitBy = iff(isnotempty(InitiatedBy.user.userPrincipalName), tostring(InitiatedBy.user.userPrincipalName), tostring(InitiatedBy.app.displayName))\n| extend UserAgent = iff(AdditionalDetails[0].key =~ \"User-Agent\", tostring(AdditionalDetails[0].value), \"\")\n// | project InitiatedBy.app, InitiatedBy.user\n| project OperationName, Category, ResourceGroup, Identity, Level, IpAddress, InitBy, UserAgent, ResultReason, ActivityDisplayName, ActivityDateTime, AADOperationType\n",
+                "queryFrequency": "PT1H",
+                "queryPeriod": "PT1H",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 1,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": [
+                    "Persistence"
+                ],
+                "techniques": [
+                    "T1137"
+                ],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": {
+                    "alertDisplayNameFormat": "AAD configuration activities performed",
+                    "alertDescriptionFormat": "AAD configuration activities performed by tenant members during passed 7d",
+                    "alertTacticsColumnName": "OperationName"
+                },
+                "customDetails": {
+                    "Operation": "OperationName",
+                    "UserAgent": "UserAgent",
+                    "ActivityName": "ActivityDisplayName"
+                },
+                "entityMappings": [
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Name",
+                                "columnName": "InitBy"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "IP",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Address",
+                                "columnName": "IpAddress"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null
+            }
+        }
+    ]
+}

@@ -1,0 +1,79 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/d66ac0a1-d4ac-4c8b-bbf2-76441d7d296a')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/d66ac0a1-d4ac-4c8b-bbf2-76441d7d296a')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2021-10-01-preview",
+            "properties": {
+                "displayName": "Detecting Impossible travel with mailbox permission tampering & Privilege Escalation attempt",
+                "description": "This hunting query will alert on any Impossible travel activity in correlation with mailbox permission tampering followed by account being added to a PIM managed privileged group.\nEnsure this impossible travel incident with increase of privileges is legitimate in your environment.",
+                "severity": "High",
+                "enabled": true,
+                "query": "SecurityAlert \n| where AlertName == \"Impossible travel activity\"\n| extend Extprop = parsejson(Entities)\n| mv-expand Extprop\n| extend Extprop = parsejson(Extprop)\n| extend CmdLine = iff(Extprop['Type']==\"process\", Extprop['CommandLine'], '')\n| extend File = iff(Extprop['Type']==\"file\", Extprop['Name'], '')\n| extend Account = Extprop['Name']\n| extend Domain = Extprop['UPNSuffix']\n| extend Account = iif(isnotempty(Domain) and Extprop['Type']==\"account\", tolower(strcat(Account, \"@\", Domain)), iif(Extprop['Type']==\"account\", tolower(Account), \"\"))\n| extend IpAddress = iff(Extprop[\"Type\"] == \"ip\",Extprop['Address'], '')\n| extend Process = iff(isnotempty(CmdLine), CmdLine, File)\n| project TimeGenerated,Account,IpAddress,CompromisedEntity,Description,ProviderName,ResourceId\n| join kind=inner\n(\nOfficeActivity\n| where Operation =~ \"Add-MailboxPermission\"\n| extend value = tostring(parse_json(Parameters)[3].Value)\n| where value contains \"FullAccess\"\n| where ResultStatus == \"True\"\n| project Parameters,TimeGenerated,value,RecordType,Operation,OrganizationId,UserType,UserKey,OfficeWorkload,ResultStatus,OfficeObjectId,UserId,ClientIP,ExternalAccess,OriginatingServer,OrganizationName,TenantId,ElevationTime,SourceSystem,OfficeId,OfficeTenantId,Type,SourceRecordId\n) on $left.Account == $right.UserId\n| join kind=inner\n(\nAuditLogs\n| where ActivityDisplayName =~ \"Add eligible member to role in PIM requested (timebound)\"\n| where AADOperationType =~ \"CreateRequestEligibleRole\"\n| where TargetResources has_any (\"-PRIV\", \"Administrator\", \"Security\")\n| extend BuiltinRole = tostring(parse_json(TargetResources[0].displayName))\n| extend CustomGroup = tostring(parse_json(TargetResources[3].displayName))\n| extend TargetAccount = tostring(parse_json(TargetResources[2].displayName))\n| extend Initiatedby = Identity\n| project TimeGenerated, ActivityDisplayName, AADOperationType, Initiatedby, TargetAccount, BuiltinRole, CustomGroup, LoggedByService, Result, ResourceId, Id\n| sort by TimeGenerated desc\n) on $left.UserId == $right.Initiatedby\n| project AADOperationType, ActivityDisplayName,AccountCustomEntity=Initiatedby, Id,ResourceId,IPCustomEntity=IpAddress",
+                "queryFrequency": "P1D",
+                "queryPeriod": "P1D",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": [
+                    "InitialAccess",
+                    "PrivilegeEscalation"
+                ],
+                "techniques": [
+                    "T1078",
+                    "T1548"
+                ],
+                "alertRuleTemplateName": "1399664f-9434-497c-9cde-42e4d74ae20e",
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Name",
+                                "columnName": "AccountCustomEntity"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "IP",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Address",
+                                "columnName": "IPCustomEntity"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null,
+                "templateVersion": "1.0.0"
+            }
+        }
+    ]
+}

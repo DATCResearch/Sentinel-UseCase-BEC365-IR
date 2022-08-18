@@ -1,0 +1,79 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/7ac9fb5f-29ac-4937-895a-f0ca46838a09')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/7ac9fb5f-29ac-4937-895a-f0ca46838a09')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2021-10-01-preview",
+            "properties": {
+                "displayName": "[DATC] Rare and potentially high-risk Office operations (\"New-Mailbox\",  \"Add-MailboxPermission\")",
+                "description": "Identifies Office operations that are typically rare and can provide capabilities useful to attackers.",
+                "severity": "Low",
+                "enabled": true,
+                "query": "// [DATC] - High-risk Office operations\n// Created on: 12-06-2022, 16-07-2022\n// By: Frankie \n// \nOfficeActivity\n| where Operation in~ (\"New-Mailbox\", \"Set-OwaMailboxPolicy\", \"Set-MailboxPlan\", \"Set-MailboxJunkEmailConfiguration\", \"Add-MailboxPermission\", \"Add-MailboxFolderPermission\", \"Set-Mailbox\", \"New-ManagementRoleAssignment\", \"New-InboxRule\", \"Set-InboxRule\", \"Set-TransportRule\")\n    and not(UserId has_any ('NT AUTHORITY\\\\SYSTEM (Microsoft.Exchange.ServiceHost)', 'NT AUTHORITY\\\\SYSTEM (w3wp)', 'devilfish-applicationaccount'))\n| extend ClientIPOnly = tostring(extract_all(@'\\[?(::ffff:)?(?P<IPAddress>(\\d+\\.\\d+\\.\\d+\\.\\d+)|[^\\]]+)\\]?', dynamic([\"IPAddress\"]), ClientIP)[0][0])\n| mv-expand  Para = todynamic(Parameters)\n| extend ParaName = Para['Name'], ParaValue = Para['Value']\n| where ParaName contains \"rule\" or ParaName contains \"Prohibit\" or ParaName contains \"Domains\"\n| extend timestamp = TimeGenerated, AccountCustomEntity = UserId, IPCustomEntity = ClientIPOnly\n| project timestamp, Operation, AccountCustomEntity, IPCustomEntity, OfficeObjectId, ParaName, ParaValue\n",
+                "queryFrequency": "P1D",
+                "queryPeriod": "P1D",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": [
+                    "Persistence",
+                    "Collection"
+                ],
+                "techniques": [
+                    "T1098",
+                    "T1114"
+                ],
+                "alertRuleTemplateName": "957cb240-f45d-4491-9ba5-93430a3c08be",
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "FullName",
+                                "columnName": "AccountCustomEntity"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "IP",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Address",
+                                "columnName": "IPCustomEntity"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null,
+                "templateVersion": "1.0.3"
+            }
+        }
+    ]
+}

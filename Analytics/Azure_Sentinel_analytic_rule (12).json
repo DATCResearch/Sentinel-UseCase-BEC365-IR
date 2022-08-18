@@ -1,0 +1,68 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/45cf36ee-8046-4632-b3dc-3f115b45718f')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/45cf36ee-8046-4632-b3dc-3f115b45718f')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2021-10-01-preview",
+            "properties": {
+                "displayName": "[DATC] Sign-in Location by User and by Device",
+                "description": "This query over Azure Active Directory sign-in considers all user sign-ins for each Azure Active \nDirectory application and picks out the most anomalous change in location profile for a user within an \nindividual application. An alert is generated for recent sign-ins that have location counts that are anomalous\nover last day but also over the last 3-day and 7-day periods.\nPlease note that on workspaces with larger volume of Signin data (~10M+ events a day) may timeout when using this default query time period.\nIt is recommended that you test and tune this appropriately for the workspace.",
+                "severity": "Informational",
+                "enabled": false,
+                "query": "// [DATC] Anomalous sign-in location by user account and by Device\n// Created on: 12-06-2022, 16-07-2022\n// By: Frankie \n// Modifications: Charting information removed \nlet lookBack_long = 7d;\nlet lookBack_med = 3d;\nlet lookBack = 1d;\nlet aadFunc = (tableName: string) {\n    table(tableName)\n    | where TimeGenerated >= startofday(ago(lookBack_long))\n    // remove sync...onmicrosoft.com\n    | where not(UserPrincipalName contains \"onmicrosoft.com\") \n    | extend\n        DeviceDetail = todynamic(DeviceDetail),\n        Status = todynamic(DeviceDetail),\n        LocationDetails = todynamic(LocationDetails)\n    | where isnotempty(LocationDetails)\n    | extend locationString = strcat(tostring(LocationDetails.countryOrRegion), \"/\", tostring(LocationDetails.state), \"/\", tostring(LocationDetails.city), \";\") \n    | project TimeGenerated, AppDisplayName, UserPrincipalName, locationString \n};\nlet aadSignin = aadFunc(\"SigninLogs\");\nlet aadNonInt = aadFunc(\"AADNonInteractiveUserSignInLogs\");\nunion isfuzzy=true aadSignin, aadNonInt",
+                "queryFrequency": "P1D",
+                "queryPeriod": "P14D",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": [
+                    "InitialAccess"
+                ],
+                "techniques": [
+                    "T1078"
+                ],
+                "alertRuleTemplateName": "7cb8f77d-c52f-4e46-b82f-3cf2e106224a",
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Name",
+                                "columnName": "UserPrincipalName"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null,
+                "templateVersion": "1.0.0"
+            }
+        }
+    ]
+}

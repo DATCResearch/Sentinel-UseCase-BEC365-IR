@@ -1,0 +1,76 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/25167fc6-b4e9-4354-9562-ef4f11c9cf3a')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/25167fc6-b4e9-4354-9562-ef4f11c9cf3a')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2021-10-01-preview",
+            "properties": {
+                "displayName": "[DATC] Suspicious Mailbox Delegations 'FullAccess', 'SendAs' or 'SendOnBehalf'",
+                "description": "This rule will identify the assignment of rights to accesss content from another mailbox. This is usually only assigned to a service account.",
+                "severity": "Medium",
+                "enabled": true,
+                "query": "// [DATC] - Suspicious Mailbox Right Delegation\n// Created on: 12-06-2022, 16-07-2022\n// By: Frankie\n// https://expel.com/blog/seven-ways-to-spot-business-email-compromise-office-365\nOfficeActivity\n| where (Operation == 'Add-MailboxPermission') and UserId !contains \"NT AUTHORITY\"\n| mv-expand bagexpansion = array todynamic(Parameters)\n| extend Key=tostring(Parameters.Name), Value=Parameters.Value\n| where (* contains 'FullAccess' or * contains 'SendAs' or * contains 'SendOnBehalf') \n| project TimeGenerated, Key, Value, Operation, UserId, OfficeObjectId, ClientIP, ExternalAccess\n",
+                "queryFrequency": "PT6H",
+                "queryPeriod": "PT6H",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": [
+                    "LateralMovement"
+                ],
+                "techniques": [],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": {
+                    "Operation": "Operation"
+                },
+                "entityMappings": [
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Name",
+                                "columnName": "UserId"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "IP",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Address",
+                                "columnName": "ClientIP"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null
+            }
+        }
+    ]
+}

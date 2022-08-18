@@ -1,0 +1,77 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/f7724dad-21f9-438d-9ee9-0c7f35c330a8')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/f7724dad-21f9-438d-9ee9-0c7f35c330a8')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2021-10-01-preview",
+            "properties": {
+                "displayName": "[DATC] Brute force attack against Azure Portal or Exchange Admin Center",
+                "description": "Identifies evidence of brute force activity against Azure Portal by highlighting multiple authentication failures and by a successful authentication within a given time window. Default Failure count is 3 and default Time Window is 30 minutes.\nReferences: https://docs.microsoft.com/azure/active-directory/reports-monitoring/reference-sign-ins-error-codes.",
+                "severity": "Medium",
+                "enabled": true,
+                "query": "// [DATC] - Detect Brute force attack against Azure Portal or Exchange Admin Center\n// Created on: 12-06-2022, 16-07-2022\n// By: Frankie changed failure Threshold = 3 and Auth Window = 30m\n// https://docs.microsoft.com/azure/active-directory/reports-monitoring/reference-sign-ins-error-codes\nlet timeRange = 24h;\nlet failureCountThreshold = 3;\nlet authenticationWindow = 30m;\nlet aadFunc = (tableName:string){\n table(tableName)\n| where AppDisplayName has_any (\"Azure Portal\", \"Exchange Admin Center\")\n| extend\n     DeviceDetail = todynamic(DeviceDetail),\n     //Status = todynamic(Status),\n     LocationDetails = todynamic(LocationDetails)\n| extend\n     OS = tostring(DeviceDetail.operatingSystem),\n     Browser = tostring(DeviceDetail.browser),\n     //StatusCode = tostring(Status.errorCode),\n     //StatusDetails = tostring(Status.additionalDetails),\n     State = tostring(LocationDetails.state),\n     City = tostring(LocationDetails.city),\n     Region = tostring(LocationDetails.countryOrRegion)\n// Split out failure versus non-failure types\n| extend FailureOrSuccess = iff(ResultType in (\"0\", \"50125\", \"50140\", \"70043\", \"70044\"), \"Success\", \"Failure\")  \n// bin outcomes based on authenticationWindow\n| summarize take_anyif(UserPrincipalName, not(UserPrincipalName matches regex @\"[a-f\\d]+\\-[a-f\\d]+\\-[a-f\\d]+\\-[a-f\\d]+\\-[a-f\\d]+\")),\n     take_anyif(UserDisplayName, isnotempty(UserDisplayName)),  FailureOrSuccessCount = count() by  FailureOrSuccess, UserId, UserDisplayName, AppDisplayName, IPAddress, Browser, OS, State, City, Region, Type, CorrelationId, bin(TimeGenerated, authenticationWindow), ResultType\n// sort for sessionizing - by UserPrincipalName and time of the authentication outcome\n| sort by UserPrincipalName asc, TimeGenerated asc\n| serialize \n// sessionize into failure groupings until either the account changes or there is a success\n| extend SessionStartedUtc = row_window_session(TimeGenerated, timeRange, authenticationWindow, UserPrincipalName != prev(UserPrincipalName) or prev(FailureOrSuccess) == \"Success\")\n// count the failures in each session\n| summarize FailureCountBeforeSuccess=sumif(FailureOrSuccessCount, FailureOrSuccess == \"Failure\"), StartTime=min(TimeGenerated), EndTime=max(TimeGenerated), makelist(FailureOrSuccess), IPAddress = make_set(IPAddress), make_set(Browser), make_set(City), make_set(State), make_set(Region), make_set(ResultType) by SessionStartedUtc, UserPrincipalName, CorrelationId, AppDisplayName, UserId, Type\n// the session must not start with a success, and must end with one\n| where array_index_of(list_FailureOrSuccess, \"Success\") != 0\n| where array_index_of(list_FailureOrSuccess, \"Success\") == array_length(list_FailureOrSuccess) - 1\n| project-away SessionStartedUtc, list_FailureOrSuccess\n// where the number of failures before the success is above the threshold \n| where FailureCountBeforeSuccess >= failureCountThreshold \n// expand out ip for entity assignment\n| mv-expand IPAddress\n| extend IPAddress = tostring(IPAddress)\n| extend timestamp = StartTime, AccountCustomEntity = UserPrincipalName, IPCustomEntity = IPAddress \n};\n let aadSignin = aadFunc(\"SigninLogs\");\n let aadNonInt = aadFunc(\"AADNonInteractiveUserSignInLogs\");\n union isfuzzy=true aadSignin, aadNonInt",
+                "queryFrequency": "P1D",
+                "queryPeriod": "P1D",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "tactics": [
+                    "CredentialAccess"
+                ],
+                "techniques": [
+                    "T1110"
+                ],
+                "alertRuleTemplateName": "28b42356-45af-40a6-a0b4-a554cdfd5d8a",
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "SingleAlert"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "FullName",
+                                "columnName": "AccountCustomEntity"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "IP",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Address",
+                                "columnName": "IPCustomEntity"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null,
+                "templateVersion": "2.0.0"
+            }
+        }
+    ]
+}
